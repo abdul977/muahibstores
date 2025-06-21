@@ -12,6 +12,7 @@ interface ProductFormData {
   image: string;
   media: ProductMedia;
   features: string[];
+  description: string;
   whatsappLink: string;
   category: string;
   isNew: boolean;
@@ -31,6 +32,7 @@ const ProductForm: React.FC = () => {
     image: '',
     media: { images: [] },
     features: [],
+    description: '',
     whatsappLink: '',
     category: '',
     isNew: false,
@@ -61,6 +63,7 @@ const ProductForm: React.FC = () => {
           image: product.image,
           media: product.media || { images: product.image ? [product.image] : [] },
           features: product.features,
+          description: product.description || '',
           whatsappLink: product.whatsappLink,
           category: product.category,
           isNew: product.isNew || false,
@@ -176,6 +179,7 @@ const ProductForm: React.FC = () => {
         image: formData.media.images[0] || '',
         media: formData.media,
         features: formData.features,
+        description: formData.description,
         whatsappLink: formData.whatsappLink,
         category: formData.category,
         isNew: formData.isNew,
@@ -252,6 +256,26 @@ const ProductForm: React.FC = () => {
                 placeholder="Enter product name"
               />
               {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+            </div>
+
+            {/* Product Description */}
+            <div className="lg:col-span-2">
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+                Product Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                value={formData.description}
+                onChange={handleInputChange}
+                rows={3}
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  errors.description ? 'border-red-300' : 'border-gray-300'
+                }`}
+                placeholder="Enter a detailed description of the product for WhatsApp messages"
+              />
+              {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+              <p className="mt-1 text-sm text-gray-500">This description will be used in WhatsApp order messages</p>
             </div>
 
             {/* Price */}

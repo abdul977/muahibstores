@@ -1,4 +1,5 @@
 import { Product } from '../types/Product';
+import { generateProductInquiryMessage, generateWhatsAppLink } from '../utils/whatsappMessage';
 
 export const products: Product[] = [
   {
@@ -7,7 +8,8 @@ export const products: Product[] = [
     price: 30000,
     image: 'https://images.pexels.com/photos/393047/pexels-photo-393047.jpeg?auto=compress&cs=tinysrgb&w=800',
     features: ['7 Interchangeable Straps', 'AirPod Included', 'Screen Protector', 'Fitness Tracking'],
-    whatsappLink: 'https://wa.me/2348144493361?text=I\'m%20interested%20in%20i20%20Ultra%20Smartwatch%0APrice:%20₦30,000%0AIncludes:%207%20straps,%20AirPod,%20screen%20protector',
+    description: 'The i20 Ultra Smartwatch combines cutting-edge technology with premium design, featuring comprehensive fitness tracking, seamless connectivity, and exceptional battery life for the modern lifestyle.',
+    whatsappLink: '',
     category: 'Smartwatch',
     isFeatured: true,
     isNew: true
@@ -18,7 +20,8 @@ export const products: Product[] = [
     price: 25000,
     image: 'https://images.pexels.com/photos/1034130/pexels-photo-1034130.jpeg?auto=compress&cs=tinysrgb&w=800',
     features: ['2 Interchangeable Straps', 'Basic Package', 'Heart Rate Monitor', 'Water Resistant'],
-    whatsappLink: 'https://wa.me/2348144493361?text=I\'m%20interested%20in%20MVP110%20Smartwatch%0APrice:%20₦25,000%0AIncludes:%202%20straps',
+    description: 'The MVP110 Smartwatch offers essential smart features with reliable performance, perfect for those seeking quality and functionality at an affordable price point.',
+    whatsappLink: '',
     category: 'Smartwatch',
     isFeatured: true
   },
@@ -29,7 +32,8 @@ export const products: Product[] = [
     originalPrice: 50000,
     image: 'https://images.pexels.com/photos/1034130/pexels-photo-1034130.jpeg?auto=compress&cs=tinysrgb&w=800',
     features: ['2 Smartwatches', '7 Straps', 'AirPod Included', 'Charger Included'],
-    whatsappLink: 'https://wa.me/2348144493361?text=I\'m%20interested%20in%20i60%20Ultra%20Smartwatch%0APrice:%20₦40,000%0AIncludes:%202%20smartwatches,%207%20straps,%20AirPod,%20charger',
+    description: 'The i60 Ultra Dual Pack provides exceptional value with two premium smartwatches, complete accessories, and advanced features for couples or those who want a backup device.',
+    whatsappLink: '',
     category: 'Smartwatch',
     isFeatured: true
   },
@@ -39,17 +43,19 @@ export const products: Product[] = [
     price: 35000,
     image: 'https://images.pexels.com/photos/267394/pexels-photo-267394.jpeg?auto=compress&cs=tinysrgb&w=800',
     features: ['Smartwatch', 'Power Bank', 'Charger', '4 Straps'],
-    whatsappLink: 'https://wa.me/2348144493361?text=I\'m%20interested%20in%20MVP135%20Smartwatch%0APrice:%20₦35,000%0AIncludes:%20smartwatch,%20power%20bank,%20charger,%204%20straps',
+    description: 'The MVP135 Power Bundle combines a feature-rich smartwatch with a portable power bank, ensuring you stay connected and powered throughout your busy day.',
+    whatsappLink: '',
     category: 'Smartwatch',
     isFeatured: true
   },
   {
     id: '3in1-backpack',
-    name: '3-in-1 Smart Backpack',
+    name: '3 in 1 Multipurpose Bag',
     price: 15000,
     image: 'https://images.pexels.com/photos/2905238/pexels-photo-2905238.jpeg?auto=compress&cs=tinysrgb&w=800',
     features: ['USB Charging Port', 'Anti-theft Design', 'Water Resistant', 'Laptop Compartment'],
-    whatsappLink: 'https://wa.me/2348144493361?text=I\'m%20interested%20in%203-in-1%20Smart%20Backpack%0APrice:%20₦15,000%0AIncludes:%20USB%20port,%20anti-theft,%20water%20resistant',
+    description: 'Our 3-in-1 Multipurpose Bag offers unparalleled versatility and style, making it the perfect companion for all your daily activities.',
+    whatsappLink: '',
     category: 'Accessories',
     isNew: true
   },
@@ -60,7 +66,8 @@ export const products: Product[] = [
     originalPrice: 25000,
     image: 'https://images.pexels.com/photos/8534088/pexels-photo-8534088.jpeg?auto=compress&cs=tinysrgb&w=800',
     features: ['Noise Cancellation', '24H Battery Life', 'Touch Controls', 'Wireless Charging'],
-    whatsappLink: 'https://wa.me/2348144493361?text=I\'m%20interested%20in%20Premium%20Wireless%20Earbuds%0APrice:%20₦18,000%0AIncludes:%20noise%20cancellation,%2024h%20battery',
+    description: 'Experience premium audio quality with our wireless earbuds featuring advanced noise cancellation, extended battery life, and seamless connectivity for the ultimate listening experience.',
+    whatsappLink: '',
     category: 'Audio'
   },
   {
@@ -69,7 +76,8 @@ export const products: Product[] = [
     price: 120000,
     image: 'https://images.pexels.com/photos/404280/pexels-photo-404280.jpeg?auto=compress&cs=tinysrgb&w=800',
     features: ['128GB Storage', '48MP Camera', '5G Ready', 'Fast Charging'],
-    whatsappLink: 'https://wa.me/2348144493361?text=I\'m%20interested%20in%20Ultra%20Pro%20Smartphone%0APrice:%20₦120,000%0AIncludes:%20128GB,%2048MP%20camera,%205G',
+    description: 'The Ultra Pro Smartphone delivers flagship performance with cutting-edge camera technology, lightning-fast 5G connectivity, and premium build quality for the discerning user.',
+    whatsappLink: '',
     category: 'Phone'
   },
   {
@@ -78,7 +86,18 @@ export const products: Product[] = [
     price: 22000,
     image: 'https://images.pexels.com/photos/4518843/pexels-photo-4518843.jpeg?auto=compress&cs=tinysrgb&w=800',
     features: ['1000W Motor', 'Multiple Speeds', 'Glass Jar', '2 Year Warranty'],
-    whatsappLink: 'https://wa.me/2348144493361?text=I\'m%20interested%20in%20Professional%20Kitchen%20Blender%0APrice:%20₦22,000%0AIncludes:%201000W%20motor,%20glass%20jar',
+    description: 'The Professional Kitchen Blender combines powerful performance with durable construction, perfect for creating smoothies, soups, and culinary masterpieces with ease.',
+    whatsappLink: '',
     category: 'Kitchen'
   }
 ];
+
+// Generate WhatsApp links for all products using the new message format
+const WHATSAPP_PHONE_NUMBER = '2348144493361';
+
+products.forEach(product => {
+  if (product.description) {
+    const message = generateProductInquiryMessage(product);
+    product.whatsappLink = generateWhatsAppLink(WHATSAPP_PHONE_NUMBER, message);
+  }
+});

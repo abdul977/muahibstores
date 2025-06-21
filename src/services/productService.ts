@@ -12,6 +12,7 @@ interface ProductRow {
   image_urls: string[] | null;
   video_url: string | null;
   features: string[];
+  description: string | null;
   whatsapp_link: string;
   category: string;
   is_new: boolean;
@@ -41,6 +42,7 @@ const mapRowToProduct = (row: ProductRow): Product => {
     image: media.images[0] || '', // First image for backward compatibility
     media,
     features: row.features,
+    description: row.description || undefined,
     whatsappLink: row.whatsapp_link,
     category: row.category,
     isNew: row.is_new,
@@ -59,6 +61,7 @@ const mapProductToInsert = (product: Omit<Product, 'id'> & { id?: string }) => (
   image_urls: product.media?.images || (product.image ? [product.image] : []),
   video_url: product.media?.video || null,
   features: product.features,
+  description: product.description || null,
   whatsapp_link: product.whatsappLink,
   category: product.category,
   is_new: product.isNew || false,
