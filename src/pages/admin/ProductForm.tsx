@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, X, Plus } from 'lucide-react';
 import { productService } from '../../services/productService';
 import { Product, ProductMedia } from '../../types/Product';
-import ImageUpload from '../../components/admin/ImageUpload';
+import MediaUpload from '../../components/admin/MediaUpload';
 
 interface ProductFormData {
   name: string;
@@ -367,9 +367,9 @@ const ProductForm: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">Product Media</h2>
 
-          <ImageUpload
-            value={formData.image}
-            onChange={(url) => setFormData(prev => ({ ...prev, image: url }))}
+          <MediaUpload
+            value={formData.media}
+            onChange={handleMediaChange}
             onError={handleMediaError}
             required={true}
           />
