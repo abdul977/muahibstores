@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Upload, X, Image as ImageIcon, Video, AlertCircle, Plus } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Video } from 'lucide-react';
 import { imageService } from '../../services/imageService';
 import { ProductMedia } from '../../types/Product';
 import { supabase } from '../../lib/supabase';
@@ -35,6 +35,16 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
     try {
       setUploading(prev => ({ ...prev, [`image-${index}`]: true }));
       
+      // If there's an existing image at this index, delete it first
+      if (value.images[index]) {
+        try {
+          await imageService.deleteImage(value.images[index]);
+        } catch (error) {
+          console.error('Failed to delete old image:', error);
+          // Continue with upload even if deletion fails
+        }
+      }
+
       // Upload to Supabase Storage
       const result = await imageService.uploadImage(file, 'products');
       
@@ -58,7 +68,7 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
 
   const handleVideoUpload = useCallback(async (file: File) => {
     // Validate video file
-    const maxSize = 50 * 1024 * 1024; // 50MB for videos
+    const maxSize = 50 * 1024 * 1024; // 50MB
     const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg'];
 
     if (!allowedTypes.includes(file.type)) {
@@ -73,8 +83,18 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
 
     try {
       setUploading(prev => ({ ...prev, video: true }));
+
+      // If there's an existing video, delete it first
+      if (value.video) {
+        try {
+          await imageService.deleteVideo(value.video);
+        } catch (error) {
+          console.error('Failed to delete old video:', error);
+          // Continue with upload even if deletion fails
+        }
+      }
       
-      // Upload to Supabase Storage (videos bucket)
+      // Upload to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `products/${fileName}`;
@@ -109,20 +129,41 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
     }
   }, [value, onChange, onError]);
 
-  const removeImage = useCallback((index: number) => {
-    const newImages = value.images.filter((_, i) => i !== index);
-    onChange({
-      ...value,
-      images: newImages
-    });
-  }, [value, onChange]);
+  const removeImage = useCallback(async (index: number) => {
+    try {
+      if (value.images[index]) {
+        await imageService.deleteImage(value.images[index]);
+      }
+      const newImages = value.images.filter((_, i) => i !== index);
+      onChange({
+        ...value,
+        images: newImages
+      });
+      onError?.(''); // Clear any previous errors
+    } catch (error) {
+      console.error('Failed to remove image:', error);
+      onError?.(error instanceof Error ? error.message : 'Failed to remove image');
+    }
+  }, [value, onChange, onError]);
 
-  const removeVideo = useCallback(() => {
-    onChange({
-      ...value,
-      video: undefined
-    });
-  }, [value, onChange]);
+  const removeVideo = useCallback(async () => {
+    try {
+      if (value.video) {
+        await imageService.deleteVideo(value.video);
+      }
+      onChange({
+        ...value,
+        video: undefined
+      });
+      onError?.(''); // Clear any previous errors
+      if (videoInputRef.current) {
+        videoInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('Failed to remove video:', error);
+      onError?.(error instanceof Error ? error.message : 'Failed to remove video');
+    }
+  }, [value, onChange, onError]);
 
   const handleDragOver = useCallback((e: React.DragEvent, target: string) => {
     e.preventDefault();

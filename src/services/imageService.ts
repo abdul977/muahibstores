@@ -42,8 +42,13 @@ export const imageService = {
   },
 
   // Delete image from Supabase Storage
-  async deleteImage(path: string): Promise<void> {
+  async deleteImage(url: string): Promise<void> {
     try {
+      const path = this.extractPathFromUrl(url);
+      if (!path) {
+        throw new Error('Invalid image URL format');
+      }
+
       const { error } = await supabase.storage
         .from('product-images')
         .remove([path]);
@@ -54,6 +59,28 @@ export const imageService = {
     } catch (error) {
       console.error('Image delete error:', error);
       throw new Error(`Failed to delete image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  },
+
+  // Delete video from Supabase Storage
+  async deleteVideo(url: string): Promise<void> {
+    try {
+      const urlObj = new URL(url);
+      const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/videos\/(.+)$/);
+      if (!pathMatch) {
+        throw new Error('Invalid video URL format');
+      }
+
+      const { error } = await supabase.storage
+        .from('videos')
+        .remove([pathMatch[1]]);
+
+      if (error) {
+        throw new Error(`Delete failed: ${error.message}`);
+      }
+    } catch (error) {
+      console.error('Video delete error:', error);
+      throw new Error(`Failed to delete video: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   },
 

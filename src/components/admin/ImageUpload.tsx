@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react';
+import { Upload, X, Image as ImageIcon } from 'lucide-react';
 import { imageService } from '../../services/imageService';
 
 interface ImageUploadProps {
@@ -37,6 +37,16 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       const previewUrl = URL.createObjectURL(file);
       setPreview(previewUrl);
 
+      // If there's an existing image, delete it first
+      if (value) {
+        try {
+          await imageService.deleteImage(value);
+        } catch (error) {
+          console.error('Failed to delete old image:', error);
+          // Continue with upload even if deletion fails
+        }
+      }
+
       // Upload to Supabase Storage
       const result = await imageService.uploadImage(file);
       
@@ -55,6 +65,23 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       setUploading(false);
     }
   }, [onChange, onError, value]);
+
+  const handleRemoveImage = useCallback(async () => {
+    if (!preview) return;
+
+    try {
+      await imageService.deleteImage(preview);
+      setPreview('');
+      onChange('');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      onError?.(''); // Clear any previous errors
+    } catch (error) {
+      console.error('Failed to remove image:', error);
+      onError?.(error instanceof Error ? error.message : 'Failed to remove image');
+    }
+  }, [onChange, onError, preview]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -86,14 +113,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
       handleFileSelect(file);
     }
   }, [handleFileSelect]);
-
-  const handleRemoveImage = useCallback(() => {
-    setPreview('');
-    onChange('');
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  }, [onChange]);
 
   const openFileDialog = useCallback(() => {
     fileInputRef.current?.click();
