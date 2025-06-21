@@ -88,6 +88,7 @@ const ProductShowcase: React.FC = () => {
               <p className="text-gray-600">
                 Browse our complete collection of electronics and gadgets
               </p>
+              <p className="text-sm text-blue-600 mt-1">Current view: {viewMode}</p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 mt-4 md:mt-0">
@@ -110,18 +111,30 @@ const ProductShowcase: React.FC = () => {
               {/* View Mode Toggle */}
               <div className="flex items-center bg-gray-200 rounded-lg p-1">
                 <button
-                  onClick={() => setViewMode('masonry')}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === 'masonry' ? 'bg-white shadow-sm' : 'hover:bg-gray-300'
+                  onClick={() => {
+                    console.log('Grid button clicked in ProductShowcase');
+                    setViewMode('grid');
+                  }}
+                  className={`p-2 rounded-md transition-all duration-200 ${
+                    viewMode === 'grid'
+                      ? 'bg-blue-500 text-white shadow-lg transform scale-105'
+                      : 'hover:bg-gray-300 text-gray-600'
                   }`}
+                  title="Grid View"
                 >
                   <Grid className="h-4 w-4" />
                 </button>
                 <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-md transition-colors ${
-                    viewMode === 'grid' ? 'bg-white shadow-sm' : 'hover:bg-gray-300'
+                  onClick={() => {
+                    console.log('Masonry button clicked in ProductShowcase');
+                    setViewMode('masonry');
+                  }}
+                  className={`p-2 rounded-md transition-all duration-200 ${
+                    viewMode === 'masonry'
+                      ? 'bg-blue-500 text-white shadow-lg transform scale-105'
+                      : 'hover:bg-gray-300 text-gray-600'
                   }`}
+                  title="Masonry View"
                 >
                   <List className="h-4 w-4" />
                 </button>
@@ -131,9 +144,9 @@ const ProductShowcase: React.FC = () => {
 
           {/* Products Grid */}
           <div className={`${
-            viewMode === 'masonry' 
-              ? 'columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6'
-              : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+            viewMode === 'masonry'
+              ? 'columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6 border-4 border-blue-300 p-4 rounded-lg'
+              : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 border-4 border-green-300 p-4 rounded-lg'
           }`}>
             {filteredProducts.map((product, index) => (
               <ProductCard

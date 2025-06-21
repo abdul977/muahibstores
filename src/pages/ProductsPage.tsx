@@ -98,7 +98,7 @@ const ProductsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white pt-20">
+    <div className="min-h-screen bg-white">
       {/* Hero Header with Green Theme */}
       <div className="bg-gradient-to-br from-green-400 via-green-500 to-green-600 relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
@@ -165,18 +165,28 @@ const ProductsPage: React.FC = () => {
               {/* View Mode Toggle */}
               <div className="flex items-center bg-gray-100 rounded-xl p-1">
                 <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-3 rounded-lg transition-colors ${
-                    viewMode === 'grid' ? 'bg-green-500 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                  onClick={() => {
+                    console.log('Grid button clicked');
+                    setViewMode('grid');
+                  }}
+                  className={`p-3 rounded-lg transition-all duration-200 ${
+                    viewMode === 'grid'
+                      ? 'bg-green-500 text-white shadow-lg transform scale-105'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
                   }`}
                   title="Grid View"
                 >
                   <Grid className="h-5 w-5" />
                 </button>
                 <button
-                  onClick={() => setViewMode('masonry')}
-                  className={`p-3 rounded-lg transition-colors ${
-                    viewMode === 'masonry' ? 'bg-green-500 text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                  onClick={() => {
+                    console.log('Masonry button clicked');
+                    setViewMode('masonry');
+                  }}
+                  className={`p-3 rounded-lg transition-all duration-200 ${
+                    viewMode === 'masonry'
+                      ? 'bg-green-500 text-white shadow-lg transform scale-105'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
                   }`}
                   title="Masonry View"
                 >
@@ -191,6 +201,7 @@ const ProductsPage: React.FC = () => {
             Showing {filteredProducts.length} of {products.length} products
             {searchTerm && ` for "${searchTerm}"`}
             {selectedCategory !== 'All' && ` in ${selectedCategory}`}
+            <span className="ml-4 text-blue-600">View: {viewMode}</span>
           </div>
         </div>
 
@@ -264,13 +275,22 @@ const ProductsPage: React.FC = () => {
 
         {/* All Products Grid */}
         <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">
             ALL PRODUCTS
           </h2>
+          <div className="text-center mb-4">
+            <span className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${
+              viewMode === 'grid'
+                ? 'bg-green-100 text-green-800'
+                : 'bg-blue-100 text-blue-800'
+            }`}>
+              Current Layout: {viewMode.toUpperCase()}
+            </span>
+          </div>
           <div className={`${
             viewMode === 'masonry'
-              ? 'columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6'
-              : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
+              ? 'flex flex-wrap gap-6 border-4 border-blue-300 p-4 rounded-lg'
+              : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 border-4 border-green-300 p-4 rounded-lg'
           }`}>
             {filteredProducts.map((product) => (
               <CatalogueProductCard
