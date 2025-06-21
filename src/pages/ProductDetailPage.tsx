@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Star, Tag, Shield, Truck, RefreshCw } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Star, Tag, Shield, Truck, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { productService } from '../services/productService';
 import { Product } from '../types/Product';
-import ImageCarousel from '../components/ImageCarousel';
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -11,6 +10,7 @@ const ProductDetailPage: React.FC = () => {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   useEffect(() => {
     const loadProduct = async () => {
@@ -48,12 +48,72 @@ const ProductDetailPage: React.FC = () => {
     loadProduct();
   }, [id]);
 
+  // Reset image index when product changes
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [product?.id]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!product) return;
+
+      const images = getProductImages();
+      if (images.length <= 1) return;
+
+      switch (event.key) {
+        case 'ArrowLeft':
+          event.preventDefault();
+          goToPreviousImage();
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          goToNextImage();
+          break;
+        case 'Home':
+          event.preventDefault();
+          setCurrentImageIndex(0);
+          break;
+        case 'End':
+          event.preventDefault();
+          setCurrentImageIndex(images.length - 1);
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [product, currentImageIndex]);
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-NG', {
       style: 'currency',
       currency: 'NGN',
       minimumFractionDigits: 0,
     }).format(price).replace('NGN', '₦');
+  };
+
+  // Get all available images for the product
+  const getProductImages = () => {
+    if (!product) return [];
+    return product.media?.images || (product.image ? [product.image] : []);
+  };
+
+  // Handle thumbnail click
+  const handleThumbnailClick = (index: number) => {
+    setCurrentImageIndex(index);
+  };
+
+  // Navigate to previous image
+  const goToPreviousImage = () => {
+    const images = getProductImages();
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  // Navigate to next image
+  const goToNextImage = () => {
+    const images = getProductImages();
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
   };
 
   // Loading state
@@ -99,30 +159,136 @@ const ProductDetailPage: React.FC = () => {
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
-          {/* Product Media Carousel */}
+          {/* Product Media Display */}
           <div className="space-y-4">
-            <div className="relative group">
-              <ImageCarousel
-                images={product.media?.images || (product.image ? [product.image] : [])}
-                video={product.media?.video}
-                className="w-full h-96"
-                autoPlay={true}
-                autoPlayInterval={5000}
-                showControls={true}
-                showDots={true}
-              />
-              {product.isNew && (
-                <div className="absolute top-4 left-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold z-10">
-                  NEW
+            {(() => {
+              const images = getProductImages();
+              const currentImage = images[currentImageIndex] || images[0];
+
+              return (
+                <div className="space-y-4">
+                  {/* Main Image Display - Portrait Orientation */}
+                  <div className="relative group">
+                    <div className="relative w-full bg-white rounded-lg shadow-lg overflow-hidden" style={{ aspectRatio: '3/4' }}>
+                      {currentImage && (
+                        <img
+                          src={currentImage}
+                          alt={`${product.name} - Image ${currentImageIndex + 1}`}
+                          className="w-full h-full object-cover transition-opacity duration-300"
+                        />
+                      )}
+
+                      {/* Navigation Arrows - Only show if more than 1 image */}
+                      {images.length > 1 && (
+                        <>
+                          <button
+                            onClick={goToPreviousImage}
+                            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
+                            aria-label="Previous image"
+                          >
+                            <ChevronLeft className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={goToNextImage}
+                            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
+                            aria-label="Next image"
+                          >
+                            <ChevronRight className="h-5 w-5" />
+                          </button>
+                        </>
+                      )}
+
+                      {/* Product Badges */}
+                      {product.isNew && (
+                        <div className="absolute top-4 left-4 bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold z-10">
+                          NEW
+                        </div>
+                      )}
+                      {product.originalPrice && (
+                        <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center z-10">
+                          <Tag className="h-4 w-4 mr-1" />
+                          SALE
+                        </div>
+                      )}
+
+                      {/* Image Counter */}
+                      {images.length > 1 && (
+                        <div className="absolute bottom-4 left-4 px-3 py-1 bg-black/60 text-white text-sm rounded-full">
+                          {currentImageIndex + 1} / {images.length}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Thumbnail Navigation - Only show if more than 1 image */}
+                  {images.length > 1 && (
+                    <div className="relative">
+                      <div className="flex justify-center space-x-2 overflow-hidden">
+                        {/* Show up to 3 thumbnails, centered around current image */}
+                        {(() => {
+                          let startIndex = 0;
+                          let endIndex = Math.min(3, images.length);
+
+                          // If more than 3 images, center around current image
+                          if (images.length > 3) {
+                            startIndex = Math.max(0, currentImageIndex - 1);
+                            endIndex = Math.min(images.length, startIndex + 3);
+
+                            // Adjust if we're near the end
+                            if (endIndex === images.length) {
+                              startIndex = Math.max(0, endIndex - 3);
+                            }
+                          }
+
+                          return images.slice(startIndex, endIndex).map((image, index) => {
+                            const actualIndex = startIndex + index;
+                            return (
+                              <button
+                                key={actualIndex}
+                                onClick={() => handleThumbnailClick(actualIndex)}
+                                className={`relative w-12 h-16 sm:w-16 sm:h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                                  actualIndex === currentImageIndex
+                                    ? 'border-blue-500 ring-2 ring-blue-200 scale-105'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                                aria-label={`View image ${actualIndex + 1}`}
+                              >
+                                <img
+                                  src={image}
+                                  alt={`${product.name} thumbnail ${actualIndex + 1}`}
+                                  className="w-full h-full object-cover"
+                                />
+                                {actualIndex === currentImageIndex && (
+                                  <div className="absolute inset-0 bg-blue-500/20"></div>
+                                )}
+                              </button>
+                            );
+                          });
+                        })()}
+                      </div>
+
+                      {/* Navigation dots for more than 3 images */}
+                      {images.length > 3 && (
+                        <div className="flex justify-center mt-2 space-x-1">
+                          {images.map((_, index) => (
+                            <button
+                              key={index}
+                              onClick={() => handleThumbnailClick(index)}
+                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                                index === currentImageIndex
+                                  ? 'bg-blue-500 scale-125'
+                                  : 'bg-gray-300 hover:bg-gray-400'
+                              }`}
+                              aria-label={`Go to image ${index + 1}`}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              )}
-              {product.originalPrice && (
-                <div className="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center z-10">
-                  <Tag className="h-4 w-4 mr-1" />
-                  SALE
-                </div>
-              )}
-            </div>
+              );
+            })()}
           </div>
 
           {/* Product Info */}
