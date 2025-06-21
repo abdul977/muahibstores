@@ -19,7 +19,7 @@ const ProductsPage: React.FC = () => {
       try {
         setLoading(true);
         const [productsData, categoriesData] = await Promise.all([
-          productService.getAllProducts(),
+          productService.getVisibleProducts(),
           productService.getCategories()
         ]);
 

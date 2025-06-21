@@ -16,6 +16,7 @@ interface ProductRow {
   category: string;
   is_new: boolean;
   is_featured: boolean;
+  is_hidden: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -44,6 +45,7 @@ const mapRowToProduct = (row: ProductRow): Product => {
     category: row.category,
     isNew: row.is_new,
     isFeatured: row.is_featured,
+    isHidden: row.is_hidden,
   };
 };
 
@@ -61,6 +63,7 @@ const mapProductToInsert = (product: Omit<Product, 'id'> & { id?: string }) => (
   category: product.category,
   is_new: product.isNew || false,
   is_featured: product.isFeatured || false,
+  is_hidden: product.isHidden || false,
 });
 
 export const productService = {
@@ -202,5 +205,72 @@ export const productService = {
 
     const categories = [...new Set(data.map(item => item.category))];
     return categories;
+  },
+
+  // Get only visible products (for public pages)
+  async getVisibleProducts(): Promise<Product[]> {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('is_hidden', false)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch visible products: ${error.message}`);
+    }
+
+    return data.map(mapRowToProduct);
+  },
+
+  // Get visible products by category
+  async getVisibleProductsByCategory(category: string): Promise<Product[]> {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('category', category)
+      .eq('is_hidden', false)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch visible products by category: ${error.message}`);
+    }
+
+    return data.map(mapRowToProduct);
+  },
+
+  // Toggle product visibility
+  async toggleProductVisibility(id: string): Promise<Product> {
+    // First get the current product to know its current state
+    const currentProduct = await this.getProductById(id);
+    if (!currentProduct) {
+      throw new Error('Product not found');
+    }
+
+    const newHiddenState = !currentProduct.isHidden;
+
+    const { data, error } = await supabase
+      .from('products')
+      .update({ is_hidden: newHiddenState })
+      .eq('original_id', id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to toggle product visibility: ${error.message}`);
+    }
+
+    return mapRowToProduct(data);
+  },
+
+  // Bulk toggle visibility for multiple products
+  async bulkToggleVisibility(ids: string[], isHidden: boolean): Promise<void> {
+    const { error } = await supabase
+      .from('products')
+      .update({ is_hidden: isHidden })
+      .in('original_id', ids);
+
+    if (error) {
+      throw new Error(`Failed to bulk toggle visibility: ${error.message}`);
+    }
   },
 };

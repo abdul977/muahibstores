@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Star, Tag, Shield, Truck, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Star, Tag, Shield, Truck, RefreshCw, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { productService } from '../services/productService';
 import { Product } from '../types/Product';
 
@@ -32,8 +32,8 @@ const ProductDetailPage: React.FC = () => {
 
         setProduct(productData);
 
-        // Load related products
-        const related = await productService.getProductsByCategory(productData.category);
+        // Load related products (only visible ones)
+        const related = await productService.getVisibleProductsByCategory(productData.category);
         setRelatedProducts(related.filter(p => p.id !== productData.id).slice(0, 4));
 
         setError(null);
@@ -58,8 +58,8 @@ const ProductDetailPage: React.FC = () => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!product) return;
 
-      const images = getProductImages();
-      if (images.length <= 1) return;
+      const media = getProductMedia();
+      if (media.length <= 1) return;
 
       switch (event.key) {
         case 'ArrowLeft':
@@ -76,7 +76,7 @@ const ProductDetailPage: React.FC = () => {
           break;
         case 'End':
           event.preventDefault();
-          setCurrentImageIndex(images.length - 1);
+          setCurrentImageIndex(media.length - 1);
           break;
       }
     };
@@ -93,7 +93,24 @@ const ProductDetailPage: React.FC = () => {
     }).format(price).replace('NGN', '₦');
   };
 
-  // Get all available images for the product
+  // Get all available media (images + video) for the product
+  const getProductMedia = () => {
+    if (!product) return [];
+    const media = [];
+
+    // Add images
+    const images = product.media?.images || (product.image ? [product.image] : []);
+    images.forEach(url => media.push({ type: 'image' as const, url }));
+
+    // Add video if available
+    if (product.media?.video) {
+      media.push({ type: 'video' as const, url: product.media.video });
+    }
+
+    return media;
+  };
+
+  // Get all available images for the product (for backward compatibility)
   const getProductImages = () => {
     if (!product) return [];
     return product.media?.images || (product.image ? [product.image] : []);
@@ -104,16 +121,16 @@ const ProductDetailPage: React.FC = () => {
     setCurrentImageIndex(index);
   };
 
-  // Navigate to previous image
+  // Navigate to previous media
   const goToPreviousImage = () => {
-    const images = getProductImages();
-    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+    const media = getProductMedia();
+    setCurrentImageIndex((prev) => (prev - 1 + media.length) % media.length);
   };
 
-  // Navigate to next image
+  // Navigate to next media
   const goToNextImage = () => {
-    const images = getProductImages();
-    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+    const media = getProductMedia();
+    setCurrentImageIndex((prev) => (prev + 1) % media.length);
   };
 
   // Loading state
@@ -162,24 +179,35 @@ const ProductDetailPage: React.FC = () => {
           {/* Product Media Display */}
           <div className="space-y-4">
             {(() => {
-              const images = getProductImages();
-              const currentImage = images[currentImageIndex] || images[0];
+              const media = getProductMedia();
+              const currentMedia = media[currentImageIndex] || media[0];
 
               return (
                 <div className="space-y-4">
-                  {/* Main Image Display - Portrait Orientation */}
+                  {/* Main Media Display - Portrait Orientation */}
                   <div className="relative group">
                     <div className="relative w-full bg-white rounded-lg shadow-lg overflow-hidden" style={{ aspectRatio: '3/4' }}>
-                      {currentImage && (
-                        <img
-                          src={currentImage}
-                          alt={`${product.name} - Image ${currentImageIndex + 1}`}
-                          className="w-full h-full object-cover transition-opacity duration-300"
-                        />
+                      {currentMedia && (
+                        <>
+                          {currentMedia.type === 'image' ? (
+                            <img
+                              src={currentMedia.url}
+                              alt={`${product.name} - Image ${currentImageIndex + 1}`}
+                              className="w-full h-full object-cover transition-opacity duration-300"
+                            />
+                          ) : (
+                            <video
+                              src={currentMedia.url}
+                              controls
+                              className="w-full h-full object-cover"
+                              poster={getProductImages()[0]} // Use first image as poster if available
+                            />
+                          )}
+                        </>
                       )}
 
-                      {/* Navigation Arrows - Only show if more than 1 image */}
-                      {images.length > 1 && (
+                      {/* Navigation Arrows - Only show if more than 1 media item */}
+                      {media.length > 1 && (
                         <>
                           <button
                             onClick={goToPreviousImage}
@@ -211,36 +239,36 @@ const ProductDetailPage: React.FC = () => {
                         </div>
                       )}
 
-                      {/* Image Counter */}
-                      {images.length > 1 && (
+                      {/* Media Counter */}
+                      {media.length > 1 && (
                         <div className="absolute bottom-4 left-4 px-3 py-1 bg-black/60 text-white text-sm rounded-full">
-                          {currentImageIndex + 1} / {images.length}
+                          {currentImageIndex + 1} / {media.length}
                         </div>
                       )}
                     </div>
                   </div>
 
-                  {/* Thumbnail Navigation - Only show if more than 1 image */}
-                  {images.length > 1 && (
+                  {/* Thumbnail Navigation - Only show if more than 1 media item */}
+                  {media.length > 1 && (
                     <div className="relative">
                       <div className="flex justify-center space-x-2 overflow-hidden">
-                        {/* Show up to 3 thumbnails, centered around current image */}
+                        {/* Show up to 3 thumbnails, centered around current media */}
                         {(() => {
                           let startIndex = 0;
-                          let endIndex = Math.min(3, images.length);
+                          let endIndex = Math.min(3, media.length);
 
-                          // If more than 3 images, center around current image
-                          if (images.length > 3) {
+                          // If more than 3 media items, center around current item
+                          if (media.length > 3) {
                             startIndex = Math.max(0, currentImageIndex - 1);
-                            endIndex = Math.min(images.length, startIndex + 3);
+                            endIndex = Math.min(media.length, startIndex + 3);
 
                             // Adjust if we're near the end
-                            if (endIndex === images.length) {
+                            if (endIndex === media.length) {
                               startIndex = Math.max(0, endIndex - 3);
                             }
                           }
 
-                          return images.slice(startIndex, endIndex).map((image, index) => {
+                          return media.slice(startIndex, endIndex).map((mediaItem, index) => {
                             const actualIndex = startIndex + index;
                             return (
                               <button
@@ -251,13 +279,29 @@ const ProductDetailPage: React.FC = () => {
                                     ? 'border-blue-500 ring-2 ring-blue-200 scale-105'
                                     : 'border-gray-200 hover:border-gray-300'
                                 }`}
-                                aria-label={`View image ${actualIndex + 1}`}
+                                aria-label={`View ${mediaItem.type} ${actualIndex + 1}`}
                               >
-                                <img
-                                  src={image}
-                                  alt={`${product.name} thumbnail ${actualIndex + 1}`}
-                                  className="w-full h-full object-cover"
-                                />
+                                {mediaItem.type === 'image' ? (
+                                  <img
+                                    src={mediaItem.url}
+                                    alt={`${product.name} thumbnail ${actualIndex + 1}`}
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="relative w-full h-full bg-gray-900">
+                                    <video
+                                      src={mediaItem.url}
+                                      className="w-full h-full object-cover"
+                                      muted
+                                    />
+                                    {/* Video play icon overlay */}
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                      <div className="w-6 h-6 bg-white/90 rounded-full flex items-center justify-center">
+                                        <Play className="w-3 h-3 text-gray-800 fill-current ml-0.5" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
                                 {actualIndex === currentImageIndex && (
                                   <div className="absolute inset-0 bg-blue-500/20"></div>
                                 )}
@@ -267,10 +311,10 @@ const ProductDetailPage: React.FC = () => {
                         })()}
                       </div>
 
-                      {/* Navigation dots for more than 3 images */}
-                      {images.length > 3 && (
+                      {/* Navigation dots for more than 3 media items */}
+                      {media.length > 3 && (
                         <div className="flex justify-center mt-2 space-x-1">
-                          {images.map((_, index) => (
+                          {media.map((_, index) => (
                             <button
                               key={index}
                               onClick={() => handleThumbnailClick(index)}
@@ -279,7 +323,7 @@ const ProductDetailPage: React.FC = () => {
                                   ? 'bg-blue-500 scale-125'
                                   : 'bg-gray-300 hover:bg-gray-400'
                               }`}
-                              aria-label={`Go to image ${index + 1}`}
+                              aria-label={`Go to ${media[index].type} ${index + 1}`}
                             />
                           ))}
                         </div>

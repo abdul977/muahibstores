@@ -16,6 +16,7 @@ interface ProductFormData {
   category: string;
   isNew: boolean;
   isFeatured: boolean;
+  isHidden: boolean;
 }
 
 const ProductForm: React.FC = () => {
@@ -34,6 +35,7 @@ const ProductForm: React.FC = () => {
     category: '',
     isNew: false,
     isFeatured: false,
+    isHidden: false,
   });
 
   const [newFeature, setNewFeature] = useState('');
@@ -63,6 +65,7 @@ const ProductForm: React.FC = () => {
           category: product.category,
           isNew: product.isNew || false,
           isFeatured: product.isFeatured || false,
+          isHidden: product.isHidden || false,
         });
       }
     } catch (error) {
@@ -177,6 +180,7 @@ const ProductForm: React.FC = () => {
         category: formData.category,
         isNew: formData.isNew,
         isFeatured: formData.isFeatured,
+        isHidden: formData.isHidden,
       };
 
       if (isEditing && id) {
@@ -358,6 +362,20 @@ const ProductForm: React.FC = () => {
               />
               <label htmlFor="isNew" className="ml-2 block text-sm text-gray-700">
                 New Product
+              </label>
+            </div>
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="isHidden"
+                name="isHidden"
+                checked={formData.isHidden}
+                onChange={handleInputChange}
+                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+              />
+              <label htmlFor="isHidden" className="ml-2 block text-sm text-gray-700">
+                Hide from public view
+                <span className="block text-xs text-gray-500">Product will not appear on the website</span>
               </label>
             </div>
           </div>

@@ -28,6 +28,7 @@ export interface Database {
           category: string;
           is_new: boolean;
           is_featured: boolean;
+          is_hidden: boolean;          // New field to hide products
           created_at: string;
           updated_at: string;
         };
