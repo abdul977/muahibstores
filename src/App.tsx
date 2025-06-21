@@ -33,16 +33,32 @@ function App() {
             <Route path="products/:id/edit" element={<ProductForm />} />
           </Route>
 
-          {/* Public Routes */}
-          <Route path="/*" element={
+          {/* Public Routes with Layout */}
+          <Route path="/" element={
             <div className="min-h-screen bg-white">
               <Header />
               <main>
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/products" element={<ProductsPage />} />
-                  <Route path="/product/:id" element={<ProductDetailPage />} />
-                </Routes>
+                <HomePage />
+              </main>
+              <Footer />
+            </div>
+          } />
+
+          <Route path="/products" element={
+            <div className="min-h-screen bg-white">
+              <Header />
+              <main>
+                <ProductsPage />
+              </main>
+              <Footer />
+            </div>
+          } />
+
+          <Route path="/product/:id" element={
+            <div className="min-h-screen bg-white">
+              <Header />
+              <main>
+                <ProductDetailPage />
               </main>
               <Footer />
             </div>
