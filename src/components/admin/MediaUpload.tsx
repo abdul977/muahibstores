@@ -246,22 +246,29 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
                     alt={`Product image ${index + 1}`}
                     className="w-full h-48 object-cover rounded-lg border border-gray-200"
                   />
-                  {/* Delete button - more visible */}
+                  {/* Delete button - positioned to avoid overlap */}
                   <button
-                    onClick={() => removeImage(index)}
-                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 opacity-80 hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeImage(index);
+                    }}
+                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 z-10"
                     title="Delete image"
                   >
                     <X className="h-4 w-4" />
                   </button>
-                  {/* Replace button */}
+                  {/* Replace button - positioned to avoid delete button */}
                   <button
-                    onClick={() => openImageDialog(index)}
-                    className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openImageDialog(index);
+                    }}
+                    className="absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-3 py-2 shadow-lg transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
+                    title="Replace image"
                   >
-                    <div className="bg-white bg-opacity-90 rounded-lg px-3 py-2 flex items-center space-x-2">
-                      <Upload className="h-4 w-4 text-gray-700" />
-                      <span className="text-sm font-medium text-gray-700">Replace</span>
+                    <div className="flex items-center space-x-1">
+                      <Upload className="h-4 w-4" />
+                      <span className="text-xs font-medium">Replace</span>
                     </div>
                   </button>
                 </div>
@@ -331,22 +338,29 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
               controls
               className="w-full h-48 object-cover rounded-lg border border-gray-200"
             />
-            {/* Delete button - more visible */}
+            {/* Delete button - positioned to avoid overlap */}
             <button
-              onClick={removeVideo}
-              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 opacity-80 hover:opacity-100"
+              onClick={(e) => {
+                e.stopPropagation();
+                removeVideo();
+              }}
+              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 z-10"
               title="Delete video"
             >
               <X className="h-4 w-4" />
             </button>
-            {/* Replace button */}
+            {/* Replace button - positioned to avoid delete button */}
             <button
-              onClick={openVideoDialog}
-              className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100"
+              onClick={(e) => {
+                e.stopPropagation();
+                openVideoDialog();
+              }}
+              className="absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-3 py-2 shadow-lg transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
+              title="Replace video"
             >
-              <div className="bg-white bg-opacity-90 rounded-lg px-3 py-2 flex items-center space-x-2">
-                <Upload className="h-4 w-4 text-gray-700" />
-                <span className="text-sm font-medium text-gray-700">Replace</span>
+              <div className="flex items-center space-x-1">
+                <Upload className="h-4 w-4" />
+                <span className="text-xs font-medium">Replace</span>
               </div>
             </button>
           </div>
