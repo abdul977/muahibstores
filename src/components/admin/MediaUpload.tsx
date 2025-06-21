@@ -131,14 +131,23 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
 
   const removeImage = useCallback(async (index: number) => {
     try {
-      if (value.images[index]) {
-        await imageService.deleteImage(value.images[index]);
-      }
+      // First remove from UI immediately for better UX
       const newImages = value.images.filter((_, i) => i !== index);
       onChange({
         ...value,
         images: newImages
       });
+
+      // Then try to delete from storage (don't block UI if this fails)
+      if (value.images[index]) {
+        try {
+          await imageService.deleteImage(value.images[index]);
+        } catch (deleteError) {
+          console.warn('Failed to delete image from storage:', deleteError);
+          // Don't show error to user since image is already removed from UI
+        }
+      }
+
       onError?.(''); // Clear any previous errors
     } catch (error) {
       console.error('Failed to remove image:', error);
@@ -148,17 +157,27 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
 
   const removeVideo = useCallback(async () => {
     try {
-      if (value.video) {
-        await imageService.deleteVideo(value.video);
-      }
+      // First remove from UI immediately for better UX
       onChange({
         ...value,
         video: undefined
       });
-      onError?.(''); // Clear any previous errors
+
       if (videoInputRef.current) {
         videoInputRef.current.value = '';
       }
+
+      // Then try to delete from storage (don't block UI if this fails)
+      if (value.video) {
+        try {
+          await imageService.deleteVideo(value.video);
+        } catch (deleteError) {
+          console.warn('Failed to delete video from storage:', deleteError);
+          // Don't show error to user since video is already removed from UI
+        }
+      }
+
+      onError?.(''); // Clear any previous errors
     } catch (error) {
       console.error('Failed to remove video:', error);
       onError?.(error instanceof Error ? error.message : 'Failed to remove video');
@@ -227,17 +246,23 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
                     alt={`Product image ${index + 1}`}
                     className="w-full h-48 object-cover rounded-lg border border-gray-200"
                   />
+                  {/* Delete button - more visible */}
                   <button
                     onClick={() => removeImage(index)}
-                    className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 opacity-80 hover:opacity-100"
+                    title="Delete image"
                   >
                     <X className="h-4 w-4" />
                   </button>
+                  {/* Replace button */}
                   <button
                     onClick={() => openImageDialog(index)}
                     className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100"
                   >
-                    <Upload className="h-6 w-6 text-white" />
+                    <div className="bg-white bg-opacity-90 rounded-lg px-3 py-2 flex items-center space-x-2">
+                      <Upload className="h-4 w-4 text-gray-700" />
+                      <span className="text-sm font-medium text-gray-700">Replace</span>
+                    </div>
                   </button>
                 </div>
               ) : (
@@ -306,17 +331,23 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
               controls
               className="w-full h-48 object-cover rounded-lg border border-gray-200"
             />
+            {/* Delete button - more visible */}
             <button
               onClick={removeVideo}
-              className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 opacity-80 hover:opacity-100"
+              title="Delete video"
             >
               <X className="h-4 w-4" />
             </button>
+            {/* Replace button */}
             <button
               onClick={openVideoDialog}
               className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-20 transition-all rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100"
             >
-              <Upload className="h-6 w-6 text-white" />
+              <div className="bg-white bg-opacity-90 rounded-lg px-3 py-2 flex items-center space-x-2">
+                <Upload className="h-4 w-4 text-gray-700" />
+                <span className="text-sm font-medium text-gray-700">Replace</span>
+              </div>
             </button>
           </div>
         ) : (

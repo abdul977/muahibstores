@@ -46,7 +46,8 @@ export const imageService = {
     try {
       const path = this.extractPathFromUrl(url);
       if (!path) {
-        throw new Error('Invalid image URL format');
+        console.warn('Could not extract path from URL, skipping deletion:', url);
+        return; // Don't throw error, just skip deletion
       }
 
       const { error } = await supabase.storage
@@ -54,11 +55,13 @@ export const imageService = {
         .remove([path]);
 
       if (error) {
-        throw new Error(`Delete failed: ${error.message}`);
+        console.warn('Storage deletion failed:', error.message);
+        // Don't throw error for storage deletion failures
+        return;
       }
     } catch (error) {
-      console.error('Image delete error:', error);
-      throw new Error(`Failed to delete image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.warn('Image delete error:', error);
+      // Don't throw error, just log warning
     }
   },
 
@@ -68,7 +71,8 @@ export const imageService = {
       const urlObj = new URL(url);
       const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/videos\/(.+)$/);
       if (!pathMatch) {
-        throw new Error('Invalid video URL format');
+        console.warn('Could not extract path from video URL, skipping deletion:', url);
+        return; // Don't throw error, just skip deletion
       }
 
       const { error } = await supabase.storage
@@ -76,11 +80,13 @@ export const imageService = {
         .remove([pathMatch[1]]);
 
       if (error) {
-        throw new Error(`Delete failed: ${error.message}`);
+        console.warn('Video storage deletion failed:', error.message);
+        // Don't throw error for storage deletion failures
+        return;
       }
     } catch (error) {
-      console.error('Video delete error:', error);
-      throw new Error(`Failed to delete video: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.warn('Video delete error:', error);
+      // Don't throw error, just log warning
     }
   },
 
@@ -118,9 +124,31 @@ export const imageService = {
   // Extract path from Supabase Storage URL
   extractPathFromUrl(url: string): string | null {
     try {
+      // Handle both full URLs and relative paths
+      if (!url) return null;
+
+      // If it's already a path (not a full URL), return as is
+      if (!url.startsWith('http')) {
+        return url.startsWith('products/') ? url : `products/${url}`;
+      }
+
       const urlObj = new URL(url);
-      const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/product-images\/(.+)$/);
-      return pathMatch ? pathMatch[1] : null;
+
+      // Try different URL patterns that Supabase might use
+      const patterns = [
+        /\/storage\/v1\/object\/public\/product-images\/(.+)$/,
+        /\/object\/public\/product-images\/(.+)$/,
+        /\/product-images\/(.+)$/
+      ];
+
+      for (const pattern of patterns) {
+        const match = urlObj.pathname.match(pattern);
+        if (match) {
+          return match[1];
+        }
+      }
+
+      return null;
     } catch {
       return null;
     }
