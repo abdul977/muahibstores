@@ -34,12 +34,12 @@ const CatalogueProductCard: React.FC<CatalogueProductCardProps> = ({ product, cl
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-2">
           {product.isNew && (
-            <div className="bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+            <div className="bg-primary-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
               NEW
             </div>
           )}
           {product.originalPrice && (
-            <div className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-lg">
+            <div className="bg-accent-red text-white px-3 py-1 rounded-full text-xs font-bold flex items-center shadow-lg">
               <Tag className="h-3 w-3 mr-1" />
               {calculateDiscount(product.originalPrice, product.price)}% OFF
             </div>
@@ -62,7 +62,7 @@ const CatalogueProductCard: React.FC<CatalogueProductCardProps> = ({ product, cl
       <div className="p-6">
         {/* Category and Rating */}
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-green-600 bg-green-50 px-3 py-1 rounded-full font-semibold">
+          <span className="text-xs text-primary-600 bg-primary-50 px-3 py-1 rounded-full font-semibold">
             {product.category}
           </span>
           <div className="flex items-center">
@@ -73,7 +73,7 @@ const CatalogueProductCard: React.FC<CatalogueProductCardProps> = ({ product, cl
 
         {/* Product Name */}
         <Link to={`/product/${product.id}`}>
-          <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 hover:text-green-600 transition-colors cursor-pointer leading-tight">
+          <h3 className="text-lg font-bold text-secondary-900 mb-3 line-clamp-2 hover:text-primary-600 transition-colors cursor-pointer leading-tight">
             {product.name}
           </h3>
         </Link>

@@ -22,7 +22,7 @@ export interface Database {
           original_price: number | null;
           image_url: string | null;
           image_urls: string[] | null; // Array of up to 3 image URLs
-          video_url: string | null;    // Optional video URL
+          video_urls: string[] | null; // Array of video URLs (support multiple videos)
           features: string[];
           description: string | null;  // Product description
           whatsapp_link: string;
@@ -41,7 +41,7 @@ export interface Database {
           original_price?: number | null;
           image_url?: string | null;
           image_urls?: string[] | null;
-          video_url?: string | null;
+          video_urls?: string[] | null;
           features: string[];
           description?: string | null;
           whatsapp_link: string;

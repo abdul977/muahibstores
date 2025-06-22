@@ -67,7 +67,7 @@ const ProductShowcase: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {featuredProducts.map((product) => (
               <ProductCard
                 key={product.id}
@@ -109,7 +109,7 @@ const ProductShowcase: React.FC = () => {
               </div>
 
               {/* View Mode Toggle */}
-              <div className="flex items-center bg-gray-200 rounded-lg p-1">
+              <div className="flex items-center bg-secondary-200 rounded-lg p-1">
                 <button
                   onClick={() => {
                     console.log('Grid button clicked in ProductShowcase');
@@ -117,8 +117,8 @@ const ProductShowcase: React.FC = () => {
                   }}
                   className={`p-2 rounded-md transition-all duration-200 ${
                     viewMode === 'grid'
-                      ? 'bg-blue-500 text-white shadow-lg transform scale-105'
-                      : 'hover:bg-gray-300 text-gray-600'
+                      ? 'bg-primary-500 text-white shadow-lg transform scale-105'
+                      : 'hover:bg-secondary-300 text-secondary-600'
                   }`}
                   title="Grid View"
                 >
@@ -131,8 +131,8 @@ const ProductShowcase: React.FC = () => {
                   }}
                   className={`p-2 rounded-md transition-all duration-200 ${
                     viewMode === 'masonry'
-                      ? 'bg-blue-500 text-white shadow-lg transform scale-105'
-                      : 'hover:bg-gray-300 text-gray-600'
+                      ? 'bg-primary-500 text-white shadow-lg transform scale-105'
+                      : 'hover:bg-secondary-300 text-secondary-600'
                   }`}
                   title="Masonry View"
                 >
@@ -145,8 +145,8 @@ const ProductShowcase: React.FC = () => {
           {/* Products Grid */}
           <div className={`${
             viewMode === 'masonry'
-              ? 'columns-1 md:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6 border-4 border-blue-300 p-4 rounded-lg'
-              : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 border-4 border-green-300 p-4 rounded-lg'
+              ? 'columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-4 sm:gap-6 space-y-4 sm:space-y-6 border-4 border-accent-blue/30 p-3 sm:p-4 rounded-lg'
+              : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 border-4 border-primary-300 p-3 sm:p-4 rounded-lg'
           }`}>
             {filteredProducts.map((product, index) => (
               <ProductCard

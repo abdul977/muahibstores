@@ -27,12 +27,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, className = '' }) =>
           className="w-full h-48 object-cover transition-transform duration-300 hover:scale-110"
         />
         {product.isNew && (
-          <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
+          <div className="absolute top-2 left-2 bg-primary-500 text-white px-2 py-1 rounded-full text-xs font-semibold">
             NEW
           </div>
         )}
         {product.originalPrice && (
-          <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center">
+          <div className="absolute top-2 right-2 bg-accent-red text-white px-2 py-1 rounded-full text-xs font-semibold flex items-center">
             <Tag className="h-3 w-3 mr-1" />
             SALE
           </div>
@@ -62,7 +62,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, className = '' }) =>
         </div>
 
         <Link to={`/product/${product.id}`}>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer">
+          <h3 className="text-lg font-semibold text-secondary-900 mb-2 line-clamp-2 hover:text-primary-600 transition-colors cursor-pointer">
             {product.name}
           </h3>
         </Link>
@@ -70,8 +70,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, className = '' }) =>
         {/* Features */}
         <ul className="space-y-1 mb-4">
           {product.features.slice(0, 3).map((feature, index) => (
-            <li key={index} className="text-sm text-gray-600 flex items-center">
-              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mr-2 flex-shrink-0"></div>
+            <li key={index} className="text-sm text-secondary-600 flex items-center">
+              <div className="w-1.5 h-1.5 bg-primary-500 rounded-full mr-2 flex-shrink-0"></div>
               {feature}
             </li>
           ))}
@@ -80,17 +80,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, className = '' }) =>
         {/* Price */}
         <div className="mb-4">
           <div className="flex items-center space-x-2">
-            <span className="text-2xl font-bold text-gray-900">
+            <span className="text-2xl font-bold text-secondary-900">
               {formatPrice(product.price)}
             </span>
             {product.originalPrice && (
-              <span className="text-lg text-gray-500 line-through">
+              <span className="text-lg text-secondary-500 line-through">
                 {formatPrice(product.originalPrice)}
               </span>
             )}
           </div>
           {product.originalPrice && (
-            <div className="text-sm text-green-600 font-medium">
+            <div className="text-sm text-primary-600 font-medium">
               Save {formatPrice(product.originalPrice - product.price)}
             </div>
           )}

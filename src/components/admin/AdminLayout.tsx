@@ -69,13 +69,13 @@ const AdminLayout: React.FC = () => {
                   to={item.href}
                   className={`group flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                     isActive(item.href)
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-primary-100 text-primary-700'
+                      : 'text-secondary-700 hover:bg-secondary-100 hover:text-secondary-900'
                   }`}
                   onClick={() => setSidebarOpen(false)}
                 >
                   <Icon className={`mr-3 h-5 w-5 ${
-                    isActive(item.href) ? 'text-blue-500' : 'text-gray-400 group-hover:text-gray-500'
+                    isActive(item.href) ? 'text-primary-500' : 'text-secondary-400 group-hover:text-secondary-500'
                   }`} />
                   {item.name}
                 </Link>
@@ -86,9 +86,9 @@ const AdminLayout: React.FC = () => {
           <div className="mt-8 pt-6 border-t border-gray-200">
             <Link
               to="/"
-              className="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 transition-colors"
+              className="group flex items-center px-3 py-2 text-sm font-medium text-secondary-700 rounded-md hover:bg-secondary-100 hover:text-secondary-900 transition-colors"
             >
-              <Home className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+              <Home className="mr-3 h-5 w-5 text-secondary-400 group-hover:text-secondary-500" />
               Back to Store
             </Link>
             <button
@@ -96,9 +96,9 @@ const AdminLayout: React.FC = () => {
                 logout();
                 navigate('/admin/login');
               }}
-              className="w-full group flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 transition-colors"
+              className="w-full group flex items-center px-3 py-2 text-sm font-medium text-secondary-700 rounded-md hover:bg-secondary-100 hover:text-secondary-900 transition-colors"
             >
-              <LogOut className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+              <LogOut className="mr-3 h-5 w-5 text-secondary-400 group-hover:text-secondary-500" />
               Logout
             </button>
           </div>
@@ -121,7 +121,7 @@ const AdminLayout: React.FC = () => {
               <div className="text-sm text-gray-500">
                 Welcome back, Admin
               </div>
-              <div className="h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center">
+              <div className="h-8 w-8 bg-primary-500 rounded-full flex items-center justify-center">
                 <Users className="h-4 w-4 text-white" />
               </div>
             </div>

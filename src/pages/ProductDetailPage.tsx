@@ -93,7 +93,7 @@ const ProductDetailPage: React.FC = () => {
     }).format(price).replace('NGN', '₦');
   };
 
-  // Get all available media (images + video) for the product
+  // Get all available media (images + videos) for the product
   const getProductMedia = () => {
     if (!product) return [];
     const media = [];
@@ -102,10 +102,9 @@ const ProductDetailPage: React.FC = () => {
     const images = product.media?.images || (product.image ? [product.image] : []);
     images.forEach(url => media.push({ type: 'image' as const, url }));
 
-    // Add video if available
-    if (product.media?.video) {
-      media.push({ type: 'video' as const, url: product.media.video });
-    }
+    // Add videos if available
+    const videos = product.media?.videos || [];
+    videos.forEach(url => media.push({ type: 'video' as const, url }));
 
     return media;
   };
@@ -158,12 +157,12 @@ const ProductDetailPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-8">
-          <Link to="/" className="hover:text-blue-600">Home</Link>
+        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-6 lg:mb-8 overflow-x-auto">
+          <Link to="/" className="hover:text-primary-600 whitespace-nowrap">Home</Link>
           <span>/</span>
-          <Link to="/products" className="hover:text-blue-600">Products</Link>
+          <Link to="/products" className="hover:text-primary-600 whitespace-nowrap">Products</Link>
           <span>/</span>
-          <span className="text-gray-900">{product.name}</span>
+          <span className="text-secondary-900 truncate">{product.name}</span>
         </div>
 
         {/* Back Button */}
@@ -175,7 +174,7 @@ const ProductDetailPage: React.FC = () => {
           <span>Back to Products</span>
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-16">
           {/* Product Media Display */}
           <div className="space-y-4">
             {(() => {
@@ -388,7 +387,7 @@ const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Trust Badges */}
-            <div className="grid grid-cols-3 gap-4 py-6 border-t border-b border-gray-200">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 py-6 border-t border-b border-gray-200">
               <div className="text-center">
                 <Shield className="h-8 w-8 text-green-500 mx-auto mb-2" />
                 <div className="text-sm font-medium text-gray-900">Secure Payment</div>
@@ -427,7 +426,7 @@ const ProductDetailPage: React.FC = () => {
         {relatedProducts.length > 0 && (
           <div>
             <h2 className="text-2xl font-bold text-gray-900 mb-8">Related Products</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((relatedProduct) => (
                 <Link
                   key={relatedProduct.id}

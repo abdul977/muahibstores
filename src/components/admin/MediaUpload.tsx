@@ -22,7 +22,7 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
   const [uploading, setUploading] = useState<{ [key: string]: boolean }>({});
   const [dragTarget, setDragTarget] = useState<string | null>(null);
   const imageInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const videoInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleImageUpload = useCallback(async (file: File, index: number) => {
     // Validate image file
@@ -66,7 +66,7 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
     }
   }, [value, onChange, onError]);
 
-  const handleVideoUpload = useCallback(async (file: File) => {
+  const handleVideoUpload = useCallback(async (file: File, index: number) => {
     // Validate video file
     const maxSize = 50 * 1024 * 1024; // 50MB
     const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg'];
@@ -82,18 +82,18 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
     }
 
     try {
-      setUploading(prev => ({ ...prev, video: true }));
+      setUploading(prev => ({ ...prev, [`video-${index}`]: true }));
 
-      // If there's an existing video, delete it first
-      if (value.video) {
+      // If there's an existing video at this index, delete it first
+      if (value.videos[index]) {
         try {
-          await imageService.deleteVideo(value.video);
+          await imageService.deleteVideo(value.videos[index]);
         } catch (error) {
           console.error('Failed to delete old video:', error);
           // Continue with upload even if deletion fails
         }
       }
-      
+
       // Upload to Supabase Storage
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
@@ -114,18 +114,22 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
       const { data: urlData } = supabase.storage
         .from('videos')
         .getPublicUrl(data.path);
-      
+
+      // Update the media object
+      const newVideos = [...value.videos];
+      newVideos[index] = urlData.publicUrl;
+
       onChange({
         ...value,
-        video: urlData.publicUrl
+        videos: newVideos
       });
-      
+
       onError?.(''); // Clear any previous errors
     } catch (error) {
       console.error('Video upload error:', error);
       onError?.(error instanceof Error ? error.message : 'Video upload failed');
     } finally {
-      setUploading(prev => ({ ...prev, video: false }));
+      setUploading(prev => ({ ...prev, [`video-${index}`]: false }));
     }
   }, [value, onChange, onError]);
 
@@ -155,22 +159,23 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
     }
   }, [value, onChange, onError]);
 
-  const removeVideo = useCallback(async () => {
+  const removeVideo = useCallback(async (index: number) => {
     try {
       // First remove from UI immediately for better UX
+      const newVideos = value.videos.filter((_, i) => i !== index);
       onChange({
         ...value,
-        video: undefined
+        videos: newVideos
       });
 
-      if (videoInputRef.current) {
-        videoInputRef.current.value = '';
+      if (videoInputRefs.current[index]) {
+        videoInputRefs.current[index]!.value = '';
       }
 
       // Then try to delete from storage (don't block UI if this fails)
-      if (value.video) {
+      if (value.videos[index]) {
         try {
-          await imageService.deleteVideo(value.video);
+          await imageService.deleteVideo(value.videos[index]);
         } catch (deleteError) {
           console.warn('Failed to delete video from storage:', deleteError);
           // Don't show error to user since video is already removed from UI
@@ -200,7 +205,7 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
 
     const files = Array.from(e.dataTransfer.files);
     const file = files[0];
-    
+
     if (!file) return;
 
     if (target === 'image' && typeof index === 'number') {
@@ -209,9 +214,9 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
       } else {
         onError?.('Please drop an image file');
       }
-    } else if (target === 'video') {
+    } else if (target === 'video' && typeof index === 'number') {
       if (file.type.startsWith('video/')) {
-        handleVideoUpload(file);
+        handleVideoUpload(file, index);
       } else {
         onError?.('Please drop a video file');
       }
@@ -222,8 +227,8 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
     imageInputRefs.current[index]?.click();
   };
 
-  const openVideoDialog = () => {
-    videoInputRef.current?.click();
+  const openVideoDialog = (index: number) => {
+    videoInputRefs.current[index]?.click();
   };
 
   return (
@@ -235,7 +240,7 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
           {required && value.images.length === 0 && <span className="text-red-500 ml-1">*</span>}
         </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[0, 1, 2].map((index) => (
             <div key={index} className="relative">
               {value.images[index] ? (
@@ -263,7 +268,7 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
                       e.stopPropagation();
                       openImageDialog(index);
                     }}
-                    className="absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-3 py-2 shadow-lg transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
+                    className="absolute bottom-2 right-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg px-3 py-2 shadow-lg transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
                     title="Replace image"
                   >
                     <div className="flex items-center space-x-1">
@@ -281,9 +286,9 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
                   onClick={() => openImageDialog(index)}
                   className={`
                     relative border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200 h-48 flex flex-col items-center justify-center
-                    ${dragTarget === 'image' 
-                      ? 'border-blue-400 bg-blue-50' 
-                      : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+                    ${dragTarget === 'image'
+                      ? 'border-primary-400 bg-primary-50'
+                      : 'border-secondary-300 hover:border-secondary-400 hover:bg-secondary-50'
                     }
                     ${uploading[`image-${index}`] ? 'pointer-events-none opacity-50' : ''}
                   `}
@@ -324,93 +329,99 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
         </div>
       </div>
 
-      {/* Video Section */}
+      {/* Videos Section */}
       <div>
         <h3 className="text-sm font-medium text-gray-900 mb-3">
-          Product Video (optional)
+          Product Videos (optional, up to 3)
         </h3>
-        
-        {value.video ? (
-          // Existing video preview
-          <div className="relative group">
-            <video
-              src={value.video}
-              controls
-              className="w-full h-48 object-cover rounded-lg border border-gray-200"
-            />
-            {/* Delete button - positioned to avoid overlap */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                removeVideo();
-              }}
-              className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 z-10"
-              title="Delete video"
-            >
-              <X className="h-4 w-4" />
-            </button>
-            {/* Replace button - positioned to avoid delete button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                openVideoDialog();
-              }}
-              className="absolute bottom-2 right-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg px-3 py-2 shadow-lg transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
-              title="Replace video"
-            >
-              <div className="flex items-center space-x-1">
-                <Upload className="h-4 w-4" />
-                <span className="text-xs font-medium">Replace</span>
-              </div>
-            </button>
-          </div>
-        ) : (
-          // Upload area
-          <div
-            onDragOver={(e) => handleDragOver(e, 'video')}
-            onDragLeave={handleDragLeave}
-            onDrop={(e) => handleDrop(e, 'video')}
-            onClick={openVideoDialog}
-            className={`
-              relative border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200 h-48 flex flex-col items-center justify-center
-              ${dragTarget === 'video' 
-                ? 'border-blue-400 bg-blue-50' 
-                : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-              }
-              ${uploading.video ? 'pointer-events-none opacity-50' : ''}
-            `}
-          >
-            {uploading.video ? (
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                <p className="text-sm text-gray-600">Uploading video...</p>
-              </div>
-            ) : (
-              <>
-                <Video className="h-8 w-8 text-gray-400 mb-2" />
-                <p className="text-sm font-medium text-gray-900 mb-1">
-                  Upload Video
-                </p>
-                <p className="text-xs text-gray-500 text-center">
-                  Click or drag to upload<br />
-                  MP4, WebM, OGG (max 50MB)
-                </p>
-              </>
-            )}
-          </div>
-        )}
-        
-        {/* Hidden video input */}
-        <input
-          ref={videoInputRef}
-          type="file"
-          accept="video/*"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) handleVideoUpload(file);
-          }}
-          className="hidden"
-        />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[0, 1, 2].map((index) => (
+            <div key={index} className="relative">
+              {value.videos[index] ? (
+                // Existing video preview
+                <div className="relative group">
+                  <video
+                    src={value.videos[index]}
+                    controls
+                    className="w-full h-48 object-cover rounded-lg border border-gray-200"
+                  />
+                  {/* Delete button - positioned to avoid overlap */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeVideo(index);
+                    }}
+                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 z-10"
+                    title="Delete video"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                  {/* Replace button - positioned to avoid delete button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openVideoDialog(index);
+                    }}
+                    className="absolute bottom-2 right-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg px-3 py-2 shadow-lg transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
+                    title="Replace video"
+                  >
+                    <div className="flex items-center space-x-1">
+                      <Upload className="h-4 w-4" />
+                      <span className="text-xs font-medium">Replace</span>
+                    </div>
+                  </button>
+                </div>
+              ) : (
+                // Upload area
+                <div
+                  onDragOver={(e) => handleDragOver(e, 'video')}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, 'video', index)}
+                  onClick={() => openVideoDialog(index)}
+                  className={`
+                    relative border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200 h-48 flex flex-col items-center justify-center
+                    ${dragTarget === 'video'
+                      ? 'border-primary-400 bg-primary-50'
+                      : 'border-secondary-300 hover:border-secondary-400 hover:bg-secondary-50'
+                    }
+                    ${uploading[`video-${index}`] ? 'pointer-events-none opacity-50' : ''}
+                  `}
+                >
+                  {uploading[`video-${index}`] ? (
+                    <div className="text-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      <p className="text-sm text-gray-600">Uploading video...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <Video className="h-8 w-8 text-gray-400 mb-2" />
+                      <p className="text-sm font-medium text-gray-900 mb-1">
+                        Video {index + 1}
+                      </p>
+                      <p className="text-xs text-gray-500 text-center">
+                        Click or drag to upload<br />
+                        MP4, WebM, OGG (max 50MB)
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* Hidden file input */}
+              <input
+                ref={(el) => videoInputRefs.current[index] = el}
+                type="file"
+                accept="video/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleVideoUpload(file, index);
+                }}
+                className="hidden"
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

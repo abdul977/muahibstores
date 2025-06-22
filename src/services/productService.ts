@@ -10,7 +10,7 @@ interface ProductRow {
   original_price: number | null;
   image_url: string | null;
   image_urls: string[] | null;
-  video_url: string | null;
+  video_urls: string[] | null;
   features: string[];
   description: string | null;
   whatsapp_link: string;
@@ -31,7 +31,7 @@ const mapRowToProduct = (row: ProductRow): Product => {
       : row.image_url
         ? [row.image_url]
         : [],
-    video: row.video_url || undefined
+    videos: row.video_urls || []
   };
 
   return {
@@ -59,7 +59,7 @@ const mapProductToInsert = (product: Omit<Product, 'id'> & { id?: string }) => (
   original_price: product.originalPrice || null,
   image_url: product.media?.images[0] || product.image || null, // Use first image from media or fallback
   image_urls: product.media?.images || (product.image ? [product.image] : []),
-  video_url: product.media?.video || null,
+  video_urls: product.media?.videos || [],
   features: product.features,
   description: product.description || null,
   whatsapp_link: product.whatsappLink,

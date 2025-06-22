@@ -41,7 +41,7 @@ const Hero: React.FC = () => {
   };
 
   return (
-    <section id="home" className="relative bg-gradient-to-r from-blue-600 to-purple-700 overflow-hidden">
+    <section id="home" className="relative bg-gradient-to-r from-primary-600 to-primary-700 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center min-h-[600px] py-12">
           {/* Left Content */}
@@ -60,20 +60,20 @@ const Hero: React.FC = () => {
               <span className="text-yellow-300"> Home Essentials</span>
             </h1>
             
-            <p className="text-xl md:text-2xl mb-8 text-blue-100">
+            <p className="text-xl md:text-2xl mb-8 text-primary-100">
               Your One-Stop Shop for Quality Electronics and Kitchen Gadgets
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <a
                 href="#products"
-                className="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition-all transform hover:scale-105 shadow-lg text-center"
+                className="bg-white text-primary-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-primary-50 transition-all transform hover:scale-105 shadow-lg text-center"
               >
                 Shop Now
               </a>
               <a
                 href="https://wa.me/2348144493361"
-                className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-blue-600 transition-all text-center"
+                className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-primary-600 transition-all text-center"
               >
                 WhatsApp Us
               </a>

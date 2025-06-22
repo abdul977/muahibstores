@@ -30,7 +30,7 @@ const ProductForm: React.FC = () => {
     price: 0,
     originalPrice: null,
     image: '',
-    media: { images: [] },
+    media: { images: [], videos: [] },
     features: [],
     description: '',
     whatsappLink: '',
@@ -61,7 +61,7 @@ const ProductForm: React.FC = () => {
           price: product.price,
           originalPrice: product.originalPrice || null,
           image: product.image,
-          media: product.media || { images: product.image ? [product.image] : [] },
+          media: product.media || { images: product.image ? [product.image] : [], videos: [] },
           features: product.features,
           description: product.description || '',
           whatsappLink: product.whatsappLink,
@@ -250,8 +250,8 @@ const ProductForm: React.FC = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.name ? 'border-red-300' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  errors.name ? 'border-red-300' : 'border-secondary-300'
                 }`}
                 placeholder="Enter product name"
               />
@@ -269,8 +269,8 @@ const ProductForm: React.FC = () => {
                 value={formData.description}
                 onChange={handleInputChange}
                 rows={3}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.description ? 'border-red-300' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  errors.description ? 'border-red-300' : 'border-secondary-300'
                 }`}
                 placeholder="Enter a detailed description of the product for WhatsApp messages"
               />
@@ -291,8 +291,8 @@ const ProductForm: React.FC = () => {
                 onChange={handleInputChange}
                 min="0"
                 step="0.01"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.price ? 'border-red-300' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  errors.price ? 'border-red-300' : 'border-secondary-300'
                 }`}
                 placeholder="0.00"
               />
@@ -312,8 +312,8 @@ const ProductForm: React.FC = () => {
                 onChange={handleInputChange}
                 min="0"
                 step="0.01"
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.originalPrice ? 'border-red-300' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  errors.originalPrice ? 'border-red-300' : 'border-secondary-300'
                 }`}
                 placeholder="0.00"
               />
@@ -332,8 +332,8 @@ const ProductForm: React.FC = () => {
                 name="category"
                 value={formData.category}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.category ? 'border-red-300' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  errors.category ? 'border-red-300' : 'border-secondary-300'
                 }`}
                 placeholder="e.g., Smartwatch, Phone, Audio"
               />
@@ -351,8 +351,8 @@ const ProductForm: React.FC = () => {
                 name="whatsappLink"
                 value={formData.whatsappLink}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.whatsappLink ? 'border-red-300' : 'border-gray-300'
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  errors.whatsappLink ? 'border-red-300' : 'border-secondary-300'
                 }`}
                 placeholder="https://wa.me/..."
               />
@@ -369,7 +369,7 @@ const ProductForm: React.FC = () => {
                 name="isFeatured"
                 checked={formData.isFeatured}
                 onChange={handleInputChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded"
               />
               <label htmlFor="isFeatured" className="ml-2 block text-sm text-gray-700">
                 Featured Product
@@ -382,7 +382,7 @@ const ProductForm: React.FC = () => {
                 name="isNew"
                 checked={formData.isNew}
                 onChange={handleInputChange}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-secondary-300 rounded"
               />
               <label htmlFor="isNew" className="ml-2 block text-sm text-gray-700">
                 New Product
@@ -395,7 +395,7 @@ const ProductForm: React.FC = () => {
                 name="isHidden"
                 checked={formData.isHidden}
                 onChange={handleInputChange}
-                className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                className="h-4 w-4 text-accent-yellow focus:ring-accent-yellow border-secondary-300 rounded"
               />
               <label htmlFor="isHidden" className="ml-2 block text-sm text-gray-700">
                 Hide from public view
@@ -427,21 +427,22 @@ const ProductForm: React.FC = () => {
 
           <div className="space-y-4">
             {/* Add Feature */}
-            <div className="flex space-x-2">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
               <input
                 type="text"
                 value={newFeature}
                 onChange={(e) => setNewFeature(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 px-3 py-2 border border-secondary-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 placeholder="Enter a product feature"
               />
               <button
                 type="button"
                 onClick={addFeature}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full sm:w-auto px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center justify-center"
               >
-                <Plus className="h-5 w-5" />
+                <Plus className="h-5 w-5 mr-2 sm:mr-0" />
+                <span className="sm:hidden">Add Feature</span>
               </button>
             </div>
 
@@ -470,18 +471,18 @@ const ProductForm: React.FC = () => {
         </div>
 
         {/* Submit Buttons */}
-        <div className="flex items-center justify-end space-x-4 pt-6">
+        <div className="flex flex-col sm:flex-row items-center justify-end space-y-3 sm:space-y-0 sm:space-x-4 pt-6">
           <button
             type="button"
             onClick={() => navigate('/admin/products')}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            className="w-full sm:w-auto px-6 py-3 border border-secondary-300 text-secondary-700 rounded-lg hover:bg-secondary-50 transition-colors"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={submitLoading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+            className="w-full sm:w-auto px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
             {submitLoading && (
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>

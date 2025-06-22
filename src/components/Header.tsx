@@ -20,7 +20,7 @@ const Header: React.FC = () => {
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <Link to="/">
-                <h1 className="text-2xl font-bold text-blue-600 hover:text-blue-700 transition-colors">
+                <h1 className="text-2xl font-bold text-primary-600 hover:text-primary-700 transition-colors">
                   Muahib Stores
                 </h1>
               </Link>
@@ -34,8 +34,8 @@ const Header: React.FC = () => {
                 to="/"
                 className={`px-3 py-2 text-sm font-medium transition-colors ${
                   isActive('/')
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-700 hover:text-blue-600'
+                    ? 'text-primary-600 border-b-2 border-primary-600'
+                    : 'text-secondary-700 hover:text-primary-600'
                 }`}
               >
                 Home
@@ -44,16 +44,16 @@ const Header: React.FC = () => {
                 to="/products"
                 className={`px-3 py-2 text-sm font-medium transition-colors ${
                   isActive('/products')
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-700 hover:text-blue-600'
+                    ? 'text-primary-600 border-b-2 border-primary-600'
+                    : 'text-secondary-700 hover:text-primary-600'
                 }`}
               >
                 Products
               </Link>
-              <a href="#about" className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
+              <a href="#about" className="text-secondary-700 hover:text-primary-600 px-3 py-2 text-sm font-medium transition-colors">
                 About Us
               </a>
-              <a href="#contact" className="text-gray-700 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
+              <a href="#contact" className="text-secondary-700 hover:text-primary-600 px-3 py-2 text-sm font-medium transition-colors">
                 Contact
               </a>
             </div>
@@ -68,17 +68,17 @@ const Header: React.FC = () => {
               <input
                 type="text"
                 placeholder="Search products..."
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                className="block w-full pl-10 pr-3 py-2 border border-secondary-300 rounded-lg leading-5 bg-white placeholder-secondary-500 focus:outline-none focus:placeholder-secondary-400 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
               />
             </div>
           </div>
 
           {/* Right side icons */}
           <div className="hidden md:flex items-center space-x-4">
-            <button className="text-gray-700 hover:text-blue-600 p-2 transition-colors">
+            <button className="text-secondary-700 hover:text-primary-600 p-2 transition-colors">
               <User className="h-6 w-6" />
             </button>
-            <button className="text-gray-700 hover:text-blue-600 p-2 transition-colors">
+            <button className="text-secondary-700 hover:text-primary-600 p-2 transition-colors">
               <ShoppingCart className="h-6 w-6" />
             </button>
           </div>
@@ -87,7 +87,7 @@ const Header: React.FC = () => {
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-gray-700 hover:text-blue-600 p-2 transition-colors"
+              className="text-secondary-700 hover:text-primary-600 p-2 transition-colors"
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
@@ -106,7 +106,7 @@ const Header: React.FC = () => {
                   <input
                     type="text"
                     placeholder="Search products..."
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    className="block w-full pl-10 pr-3 py-2 border border-secondary-300 rounded-lg text-sm"
                   />
                 </div>
               </div>
@@ -114,8 +114,8 @@ const Header: React.FC = () => {
                 to="/"
                 className={`block px-3 py-2 text-base font-medium ${
                   isActive('/')
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-gray-700 hover:text-blue-600'
+                    ? 'text-primary-600 bg-primary-50'
+                    : 'text-secondary-700 hover:text-primary-600'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
@@ -125,17 +125,17 @@ const Header: React.FC = () => {
                 to="/products"
                 className={`block px-3 py-2 text-base font-medium ${
                   isActive('/products')
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-gray-700 hover:text-blue-600'
+                    ? 'text-primary-600 bg-primary-50'
+                    : 'text-secondary-700 hover:text-primary-600'
                 }`}
                 onClick={() => setIsMenuOpen(false)}
               >
                 Products
               </Link>
-              <a href="#about" className="text-gray-700 hover:text-blue-600 block px-3 py-2 text-base font-medium">
+              <a href="#about" className="text-secondary-700 hover:text-primary-600 block px-3 py-2 text-base font-medium">
                 About Us
               </a>
-              <a href="#contact" className="text-gray-700 hover:text-blue-600 block px-3 py-2 text-base font-medium">
+              <a href="#contact" className="text-secondary-700 hover:text-primary-600 block px-3 py-2 text-base font-medium">
                 Contact
               </a>
             </div>

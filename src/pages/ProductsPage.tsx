@@ -99,8 +99,8 @@ const ProductsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Header with Green Theme */}
-      <div className="bg-gradient-to-br from-green-400 via-green-500 to-green-600 relative overflow-hidden">
+      {/* Hero Header with Primary Theme */}
+      <div className="bg-gradient-to-br from-primary-400 via-primary-500 to-primary-600 relative overflow-hidden">
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center text-white">
@@ -110,14 +110,14 @@ const ProductsPage: React.FC = () => {
             </div>
             <h1 className="text-5xl md:text-7xl font-black mb-4">
               <span className="text-white">ELECTRONIC</span><br />
-              <span className="text-green-200">DISCOUNT</span><br />
+              <span className="text-primary-200">DISCOUNT</span><br />
               <span className="text-white">CATALOGUE</span>
             </h1>
-            <div className="inline-flex items-center bg-green-400 text-green-900 px-8 py-4 rounded-2xl font-bold text-2xl mb-6 shadow-xl">
+            <div className="inline-flex items-center bg-primary-400 text-primary-900 px-8 py-4 rounded-2xl font-bold text-2xl mb-6 shadow-xl">
               <span className="text-4xl mr-2">50%</span>
               <span>DISCOUNT</span>
             </div>
-            <p className="text-xl text-green-100 max-w-2xl mx-auto">
+            <p className="text-xl text-primary-100 max-w-2xl mx-auto">
               Limited time offer on premium electronics, smart devices, and accessories
             </p>
           </div>
@@ -126,7 +126,7 @@ const ProductsPage: React.FC = () => {
         {/* Decorative Elements */}
         <div className="absolute top-10 left-10 w-20 h-20 bg-white/10 rounded-full"></div>
         <div className="absolute bottom-10 right-10 w-32 h-32 bg-white/5 rounded-full"></div>
-        <div className="absolute top-1/2 right-20 w-16 h-16 bg-green-300/20 rounded-full"></div>
+        <div className="absolute top-1/2 right-20 w-16 h-16 bg-primary-300/20 rounded-full"></div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -141,7 +141,7 @@ const ProductsPage: React.FC = () => {
                 placeholder="Search products..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50"
+                className="w-full pl-10 pr-4 py-3 border border-secondary-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-secondary-50"
               />
             </div>
 
@@ -152,7 +152,7 @@ const ProductsPage: React.FC = () => {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50"
+                  className="border border-secondary-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-secondary-50"
                 >
                   {categories.map((category) => (
                     <option key={category} value={category}>
@@ -163,7 +163,7 @@ const ProductsPage: React.FC = () => {
               </div>
 
               {/* View Mode Toggle */}
-              <div className="flex items-center bg-gray-100 rounded-xl p-1">
+              <div className="flex items-center bg-secondary-100 rounded-xl p-1">
                 <button
                   onClick={() => {
                     console.log('Grid button clicked');
@@ -171,8 +171,8 @@ const ProductsPage: React.FC = () => {
                   }}
                   className={`p-3 rounded-lg transition-all duration-200 ${
                     viewMode === 'grid'
-                      ? 'bg-green-500 text-white shadow-lg transform scale-105'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                      ? 'bg-primary-500 text-white shadow-lg transform scale-105'
+                      : 'text-secondary-600 hover:text-secondary-900 hover:bg-secondary-200'
                   }`}
                   title="Grid View"
                 >
@@ -185,8 +185,8 @@ const ProductsPage: React.FC = () => {
                   }}
                   className={`p-3 rounded-lg transition-all duration-200 ${
                     viewMode === 'masonry'
-                      ? 'bg-green-500 text-white shadow-lg transform scale-105'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                      ? 'bg-primary-500 text-white shadow-lg transform scale-105'
+                      : 'text-secondary-600 hover:text-secondary-900 hover:bg-secondary-200'
                   }`}
                   title="Masonry View"
                 >
@@ -205,73 +205,7 @@ const ProductsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Featured Products Section */}
-        {filteredProducts.filter(p => p.isFeatured).length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8 text-center">
-              <span className="bg-gradient-to-r from-green-600 to-green-400 bg-clip-text text-transparent">
-                LIMITED OFFERS
-              </span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProducts.filter(p => p.isFeatured).slice(0, 3).map((product, index) => (
-                <div key={product.id} className="relative">
-                  {/* Catalogue-style Product Card */}
-                  <div className="bg-gradient-to-br from-green-400 to-green-500 rounded-3xl p-6 text-white relative overflow-hidden">
-                    <div className="absolute top-4 right-4 bg-white text-green-600 px-3 py-1 rounded-full text-sm font-bold">
-                      {product.originalPrice ? `${calculateDiscount(product.originalPrice, product.price)}%` : '50%'} OFF
-                    </div>
 
-                    <div className="relative z-10">
-                      <div className="text-sm font-semibold mb-2 opacity-90">LIMITED OFFER</div>
-                      <h3 className="text-2xl font-black mb-4 leading-tight">
-                        {product.name.toUpperCase()}
-                      </h3>
-
-                      <div className="mb-6">
-                        <div className="text-3xl font-black text-red-400">
-                          {formatPrice(product.price)}
-                        </div>
-                        {product.originalPrice && (
-                          <div className="text-lg line-through opacity-75">
-                            {formatPrice(product.originalPrice)}
-                          </div>
-                        )}
-                      </div>
-
-                      <p className="text-sm opacity-90 mb-6 leading-relaxed">
-                        {product.features.slice(0, 2).join(', ')}. Premium quality with warranty included.
-                      </p>
-
-                      <a
-                        href={product.whatsappLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center bg-white text-green-600 px-6 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors"
-                      >
-                        <MessageCircle className="h-5 w-5 mr-2" />
-                        ORDER NOW
-                      </a>
-                    </div>
-
-                    {/* Product Image */}
-                    <div className="absolute -right-8 -bottom-8 w-48 h-48 opacity-20">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover rounded-2xl"
-                      />
-                    </div>
-
-                    {/* Decorative Elements */}
-                    <div className="absolute top-0 left-0 w-20 h-20 bg-white/10 rounded-full -translate-x-10 -translate-y-10"></div>
-                    <div className="absolute bottom-0 right-0 w-32 h-32 bg-white/5 rounded-full translate-x-16 translate-y-16"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* All Products Grid */}
         <div className="mb-8">
@@ -281,16 +215,16 @@ const ProductsPage: React.FC = () => {
           <div className="text-center mb-4">
             <span className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${
               viewMode === 'grid'
-                ? 'bg-green-100 text-green-800'
-                : 'bg-blue-100 text-blue-800'
+                ? 'bg-primary-100 text-primary-800'
+                : 'bg-accent-blue/10 text-accent-blue'
             }`}>
               Current Layout: {viewMode.toUpperCase()}
             </span>
           </div>
           <div className={`${
             viewMode === 'masonry'
-              ? 'flex flex-wrap gap-6 border-4 border-blue-300 p-4 rounded-lg'
-              : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 border-4 border-green-300 p-4 rounded-lg'
+              ? 'flex flex-wrap gap-4 sm:gap-6 border-4 border-accent-blue/30 p-3 sm:p-4 rounded-lg'
+              : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 border-4 border-primary-300 p-3 sm:p-4 rounded-lg'
           }`}>
             {filteredProducts.map((product) => (
               <CatalogueProductCard
@@ -317,7 +251,7 @@ const ProductsPage: React.FC = () => {
                 setSearchTerm('');
                 setSelectedCategory('All');
               }}
-              className="mt-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
               Clear Filters
             </button>
@@ -325,32 +259,32 @@ const ProductsPage: React.FC = () => {
         )}
 
         {/* Call to Action Footer */}
-        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-3xl p-8 text-white text-center mt-16">
+        <div className="bg-gradient-to-r from-primary-500 to-primary-600 rounded-3xl p-8 text-white text-center mt-16">
           <h3 className="text-2xl font-bold mb-4">THANK YOU.</h3>
           <div className="flex flex-col md:flex-row items-center justify-center gap-8">
             <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-4">
-              <div className="bg-green-400 rounded-full p-3 mr-4">
-                <MessageCircle className="h-6 w-6 text-green-900" />
+              <div className="bg-primary-400 rounded-full p-3 mr-4">
+                <MessageCircle className="h-6 w-6 text-primary-900" />
               </div>
               <div className="text-left">
                 <div className="font-bold">CONTACT US</div>
-                <div className="text-green-100">+234-814-449-3361</div>
+                <div className="text-primary-100">+234-814-449-3361</div>
               </div>
             </div>
 
             <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-2xl px-6 py-4">
-              <div className="bg-green-400 rounded-full p-3 mr-4">
-                <Star className="h-6 w-6 text-green-900" />
+              <div className="bg-primary-400 rounded-full p-3 mr-4">
+                <Star className="h-6 w-6 text-primary-900" />
               </div>
               <div className="text-left">
                 <div className="font-bold">VISIT OUR WEBSITE</div>
-                <div className="text-green-100">www.muahibstores.com</div>
+                <div className="text-primary-100">www.muahibstores.com</div>
               </div>
             </div>
           </div>
 
           <div className="mt-8">
-            <button className="bg-green-400 text-green-900 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-green-300 transition-colors">
+            <button className="bg-primary-400 text-primary-900 px-8 py-4 rounded-2xl font-bold text-lg hover:bg-primary-300 transition-colors">
               SHOP NOW
             </button>
           </div>
