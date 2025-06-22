@@ -37,6 +37,8 @@ export interface Product {
   isNew?: boolean;
   isFeatured?: boolean;
   isHidden?: boolean; // New field to hide products (out of stock, etc.)
+  createdAt?: string; // Date when product was created
+  updatedAt?: string; // Date when product was last updated
 }
 
 // Extended type for admin operations that includes database UUID

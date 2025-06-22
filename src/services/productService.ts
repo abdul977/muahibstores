@@ -71,6 +71,8 @@ const mapRowToProduct = (row: ProductRow): Product => {
     isNew: row.is_new,
     isFeatured: row.is_featured,
     isHidden: row.is_hidden,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   };
 };
 

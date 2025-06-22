@@ -1,13 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { Filter, Grid, List, Search, Tag, Star, MessageCircle, Phone } from 'lucide-react';
+import { Filter, Grid, List, Search, Tag, Star, MessageCircle, Phone, ArrowUpDown } from 'lucide-react';
 import CatalogueProductCard from '../components/CatalogueProductCard';
 import { productService } from '../services/productService';
 import { Product } from '../types/Product';
+
+// Define sorting options
+type SortOption = 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc' | 'date-newest' | 'date-oldest';
+
+interface SortConfig {
+  value: SortOption;
+  label: string;
+}
+
+const sortOptions: SortConfig[] = [
+  { value: 'price-asc', label: 'Price: Low to High' },
+  { value: 'price-desc', label: 'Price: High to Low' },
+  { value: 'name-asc', label: 'Name: A to Z' },
+  { value: 'name-desc', label: 'Name: Z to A' },
+  { value: 'date-newest', label: 'Newest First' },
+  { value: 'date-oldest', label: 'Oldest First' }
+];
 
 const ProductsPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [viewMode, setViewMode] = useState<'masonry' | 'grid'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('price-asc'); // Default to price ascending
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>(['All']);
   const [loading, setLoading] = useState(true);
@@ -37,11 +55,42 @@ const ProductsPage: React.FC = () => {
     loadData();
   }, []);
 
+  // Filter products based on category and search
   const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory;
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          product.features.some(feature => feature.toLowerCase().includes(searchTerm.toLowerCase()));
     return matchesCategory && matchesSearch;
+  });
+
+  // Sort products based on selected sort option
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortBy) {
+      case 'price-asc':
+        return a.price - b.price;
+      case 'price-desc':
+        return b.price - a.price;
+      case 'name-asc':
+        return a.name.localeCompare(b.name);
+      case 'name-desc':
+        return b.name.localeCompare(a.name);
+      case 'date-newest':
+        // Sort by creation date, newest first
+        if (a.createdAt && b.createdAt) {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        }
+        // Fallback to ID comparison if dates are not available
+        return b.id.localeCompare(a.id);
+      case 'date-oldest':
+        // Sort by creation date, oldest first
+        if (a.createdAt && b.createdAt) {
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        }
+        // Fallback to ID comparison if dates are not available
+        return a.id.localeCompare(b.id);
+      default:
+        return a.price - b.price; // Default to price ascending
+    }
   });
 
   // Loading state
@@ -162,6 +211,22 @@ const ProductsPage: React.FC = () => {
                 </select>
               </div>
 
+              {/* Sort Filter */}
+              <div className="flex items-center space-x-2">
+                <ArrowUpDown className="h-5 w-5 text-gray-500" />
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as SortOption)}
+                  className="border border-secondary-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-secondary-50"
+                >
+                  {sortOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* View Mode Toggle */}
               <div className="flex items-center bg-secondary-100 rounded-xl p-1">
                 <button
@@ -198,10 +263,13 @@ const ProductsPage: React.FC = () => {
 
           {/* Results Count */}
           <div className="mt-4 text-sm text-gray-600">
-            Showing {filteredProducts.length} of {products.length} products
+            Showing {sortedProducts.length} of {products.length} products
             {searchTerm && ` for "${searchTerm}"`}
             {selectedCategory !== 'All' && ` in ${selectedCategory}`}
             <span className="ml-4 text-blue-600">View: {viewMode}</span>
+            <span className="ml-4 text-green-600">
+              Sorted by: {sortOptions.find(option => option.value === sortBy)?.label}
+            </span>
           </div>
         </div>
 
@@ -226,7 +294,7 @@ const ProductsPage: React.FC = () => {
               ? 'flex flex-wrap gap-4 sm:gap-6 border-4 border-accent-blue/30 p-3 sm:p-4 rounded-lg'
               : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 border-4 border-primary-300 p-3 sm:p-4 rounded-lg'
           }`}>
-            {filteredProducts.map((product) => (
+            {sortedProducts.map((product) => (
               <CatalogueProductCard
                 key={product.id}
                 product={product}
@@ -237,7 +305,7 @@ const ProductsPage: React.FC = () => {
         </div>
 
         {/* No Results */}
-        {filteredProducts.length === 0 && (
+        {sortedProducts.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <Search className="h-16 w-16 mx-auto" />
@@ -250,6 +318,7 @@ const ProductsPage: React.FC = () => {
               onClick={() => {
                 setSearchTerm('');
                 setSelectedCategory('All');
+                setSortBy('price-asc'); // Reset to default sort
               }}
               className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
             >
