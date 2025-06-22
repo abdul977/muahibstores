@@ -167,17 +167,23 @@ const EnhancedMediaUpload: React.FC<EnhancedMediaUploadProps> = ({
 
   // Handle drag and drop for reordering
   const handleDragStart = useCallback((e: React.DragEvent, itemId: string) => {
+    e.stopPropagation();
     setDraggedItem(itemId);
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', itemId);
   }, []);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  }, []);
+    e.stopPropagation();
+    if (draggedItem) {
+      e.dataTransfer.dropEffect = 'move';
+    }
+  }, [draggedItem]);
 
   const handleDrop = useCallback((e: React.DragEvent, targetItemId: string) => {
     e.preventDefault();
+    e.stopPropagation();
 
     if (!draggedItem || draggedItem === targetItemId) {
       setDraggedItem(null);
@@ -207,12 +213,13 @@ const EnhancedMediaUpload: React.FC<EnhancedMediaUploadProps> = ({
 
   const handleFileDrop = useCallback((e: React.DragEvent, itemId: string) => {
     e.preventDefault();
+    e.stopPropagation();
     setDragTarget(null);
 
+    // Only handle file drops, not item reordering
     const files = Array.from(e.dataTransfer.files);
-    const file = files[0];
-
-    if (file) {
+    if (files.length > 0) {
+      const file = files[0];
       handleFileUpload(file, itemId);
     }
   }, [handleFileUpload]);
@@ -245,6 +252,7 @@ const EnhancedMediaUpload: React.FC<EnhancedMediaUploadProps> = ({
         </h3>
         <div className="flex space-x-2">
           <button
+            type="button"
             onClick={() => addMediaItem('image')}
             className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
@@ -252,6 +260,7 @@ const EnhancedMediaUpload: React.FC<EnhancedMediaUploadProps> = ({
             Add Image
           </button>
           <button
+            type="button"
             onClick={() => addMediaItem('video')}
             className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
@@ -259,6 +268,7 @@ const EnhancedMediaUpload: React.FC<EnhancedMediaUploadProps> = ({
             Add Video
           </button>
           <button
+            type="button"
             onClick={() => setShowYoutubeInput(true)}
             className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
           >
@@ -281,12 +291,14 @@ const EnhancedMediaUpload: React.FC<EnhancedMediaUploadProps> = ({
               className="flex-1 min-w-0 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
             />
             <button
+              type="button"
               onClick={handleYouTubeAdd}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             >
               Add
             </button>
             <button
+              type="button"
               onClick={() => {
                 setShowYoutubeInput(false);
                 setYoutubeUrl('');
@@ -355,13 +367,27 @@ const EnhancedMediaUpload: React.FC<EnhancedMediaUploadProps> = ({
                       </div>
                     ) : (
                       <div
-                        onDragOver={handleFileDragOver}
-                        onDragLeave={handleFileDragLeave}
-                        onDrop={(e) => handleFileDrop(e, item.id)}
+                        onDragOver={(e) => {
+                          // Only handle file drag over if we're not dragging a media item
+                          if (!draggedItem) {
+                            handleFileDragOver(e);
+                          }
+                        }}
+                        onDragLeave={(e) => {
+                          if (!draggedItem) {
+                            handleFileDragLeave(e);
+                          }
+                        }}
+                        onDrop={(e) => {
+                          // Only handle file drops if we're not reordering
+                          if (!draggedItem && e.dataTransfer.files.length > 0) {
+                            handleFileDrop(e, item.id);
+                          }
+                        }}
                         onClick={() => openFileDialog(item.id)}
                         className={`
                           h-20 w-20 border-2 border-dashed rounded-lg cursor-pointer flex items-center justify-center transition-colors duration-200
-                          ${dragTarget === 'file' ? 'border-primary-400 bg-primary-50' : 'border-gray-300 hover:border-gray-400'}
+                          ${dragTarget === 'file' && !draggedItem ? 'border-primary-400 bg-primary-50' : 'border-gray-300 hover:border-gray-400'}
                           ${uploading[item.id] ? 'pointer-events-none opacity-50' : ''}
                         `}
                       >
@@ -399,6 +425,7 @@ const EnhancedMediaUpload: React.FC<EnhancedMediaUploadProps> = ({
                   <div className="flex items-center space-x-2">
                     {item.url && (
                       <button
+                        type="button"
                         onClick={() => openFileDialog(item.id)}
                         className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                       >
@@ -407,6 +434,7 @@ const EnhancedMediaUpload: React.FC<EnhancedMediaUploadProps> = ({
                       </button>
                     )}
                     <button
+                      type="button"
                       onClick={() => removeMediaItem(item.id)}
                       className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     >

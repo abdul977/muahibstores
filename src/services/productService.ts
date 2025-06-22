@@ -112,7 +112,7 @@ const mapProductToInsert = (product: Omit<Product, 'id'> & { id?: string }) => {
     image_url: images[0] || null, // First image for backward compatibility
     image_urls: images,
     video_urls: videos,
-    ordered_media: enhancedMedia?.items ? JSON.stringify(enhancedMedia.items) : null,
+    ordered_media: enhancedMedia?.items || null,
     features: product.features,
     description: product.description || null,
     whatsapp_link: product.whatsappLink,
