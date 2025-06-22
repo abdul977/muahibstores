@@ -61,7 +61,7 @@ export const generateProductInquiryMessage = (product: Product): string => {
     minimumFractionDigits: 2,
   }).format(product.price).replace('NGN', '₦');
 
-  const message = `🛍 Product Inquiry
+  const message = `🛍 New Order
 
 Item: ${product.name}
 Price: ${formattedPrice}

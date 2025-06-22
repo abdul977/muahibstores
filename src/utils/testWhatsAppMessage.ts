@@ -23,7 +23,7 @@ export const testWhatsAppMessages = () => {
   console.log(orderMessage);
 
   // Test Product Inquiry Message Generation
-  console.log('\n📱 Testing Product Inquiry Message:');
+  console.log('\n📱 Testing New Order Message:');
   const testProduct: Product = {
     id: '3in1-backpack',
     name: '3 in 1 Multipurpose Bag',
