@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, X, Plus } from 'lucide-react';
 import { productService } from '../../services/productService';
-import { Product, ProductMedia } from '../../types/Product';
-import MediaUpload from '../../components/admin/MediaUpload';
+import { Product, EnhancedProductMedia, MediaUtils } from '../../types/Product';
+import EnhancedMediaUpload from '../../components/admin/MediaUpload';
 
 interface ProductFormData {
   name: string;
   price: number;
   originalPrice: number | null;
   image: string;
-  media: ProductMedia;
+  enhancedMedia: EnhancedProductMedia;
   features: string[];
   description: string;
   whatsappLink: string;
@@ -30,7 +30,7 @@ const ProductForm: React.FC = () => {
     price: 0,
     originalPrice: null,
     image: '',
-    media: { images: [], videos: [] },
+    enhancedMedia: { items: [] },
     features: [],
     description: '',
     whatsappLink: '',
@@ -56,12 +56,22 @@ const ProductForm: React.FC = () => {
       setLoading(true);
       const product = await productService.getProductById(productId);
       if (product) {
+        // Use enhanced media if available, otherwise convert legacy media
+        let enhancedMedia: EnhancedProductMedia;
+        if (product.enhancedMedia?.items && product.enhancedMedia.items.length > 0) {
+          enhancedMedia = product.enhancedMedia;
+        } else {
+          // Convert legacy media to enhanced format
+          const legacyMedia = product.media || { images: product.image ? [product.image] : [], videos: [] };
+          enhancedMedia = MediaUtils.legacyToEnhanced(legacyMedia);
+        }
+
         setFormData({
           name: product.name,
           price: product.price,
           originalPrice: product.originalPrice || null,
           image: product.image,
-          media: product.media || { images: product.image ? [product.image] : [], videos: [] },
+          enhancedMedia,
           features: product.features,
           description: product.description || '',
           whatsappLink: product.whatsappLink,
@@ -97,11 +107,14 @@ const ProductForm: React.FC = () => {
     }
   };
 
-  const handleMediaChange = (media: ProductMedia) => {
+  const handleMediaChange = (enhancedMedia: EnhancedProductMedia) => {
+    // Get first image for backward compatibility
+    const firstImage = enhancedMedia.items.find(item => item.type === 'image')?.url || '';
+
     setFormData(prev => ({
       ...prev,
-      media,
-      image: media.images[0] || '' // Update legacy image field for backward compatibility
+      enhancedMedia,
+      image: firstImage
     }));
     setErrors(prev => ({ ...prev, image: '', media: '' }));
   };
@@ -154,8 +167,8 @@ const ProductForm: React.FC = () => {
       newErrors.whatsappLink = 'WhatsApp link is required';
     }
 
-    if (!formData.media.images.length) {
-      newErrors.media = 'At least one product image is required';
+    if (!formData.enhancedMedia.items.length) {
+      newErrors.media = 'At least one product media item is required';
     }
 
     setErrors(newErrors);
@@ -176,8 +189,8 @@ const ProductForm: React.FC = () => {
         name: formData.name,
         price: formData.price,
         originalPrice: formData.originalPrice || undefined,
-        image: formData.media.images[0] || '',
-        media: formData.media,
+        image: formData.image,
+        enhancedMedia: formData.enhancedMedia,
         features: formData.features,
         description: formData.description,
         whatsappLink: formData.whatsappLink,
@@ -409,8 +422,8 @@ const ProductForm: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">Product Media</h2>
 
-          <MediaUpload
-            value={formData.media}
+          <EnhancedMediaUpload
+            value={formData.enhancedMedia}
             onChange={handleMediaChange}
             onError={handleMediaError}
             required={true}

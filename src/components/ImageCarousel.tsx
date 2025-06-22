@@ -1,9 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
+import { MediaUtils } from '../types/Product';
+
+interface MediaItem {
+  type: 'image' | 'video' | 'youtube';
+  url: string;
+  thumbnail?: string;
+}
 
 interface ImageCarouselProps {
-  images: string[];
-  video?: string;
+  images?: string[]; // Legacy support
+  video?: string; // Legacy support
+  mediaItems?: MediaItem[]; // New enhanced media support
   autoPlay?: boolean;
   autoPlayInterval?: number;
   className?: string;
@@ -12,8 +20,9 @@ interface ImageCarouselProps {
 }
 
 const ImageCarousel: React.FC<ImageCarouselProps> = ({
-  images,
+  images = [],
   video,
+  mediaItems: propMediaItems,
   autoPlay = true,
   autoPlayInterval = 4000,
   className = '',
@@ -24,14 +33,19 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
   const [isPlaying, setIsPlaying] = useState(autoPlay);
   const [isHovered, setIsHovered] = useState(false);
 
-  // Combine images and video into a single media array
+  // Use enhanced media items if provided, otherwise fall back to legacy props
   const mediaItems = React.useMemo(() => {
-    const items = images.map(url => ({ type: 'image' as const, url }));
+    if (propMediaItems && propMediaItems.length > 0) {
+      return propMediaItems;
+    }
+
+    // Legacy support: combine images and video
+    const items: MediaItem[] = images.map(url => ({ type: 'image' as const, url }));
     if (video) {
       items.push({ type: 'video' as const, url: video });
     }
     return items;
-  }, [images, video]);
+  }, [propMediaItems, images, video]);
 
   const totalItems = mediaItems.length;
 
@@ -96,14 +110,26 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
                 className="w-full h-full object-cover"
                 style={{ aspectRatio: '3/4' }} // Portrait orientation
               />
-            ) : (
+            ) : item.type === 'video' ? (
               <video
                 src={item.url}
                 controls
                 className="w-full h-full object-cover"
                 style={{ aspectRatio: '3/4' }} // Portrait orientation
               />
-            )}
+            ) : item.type === 'youtube' ? (
+              <div className="w-full h-full relative">
+                <iframe
+                  src={`https://www.youtube.com/embed/${MediaUtils.getYouTubeVideoId(item.url)}?autoplay=0&controls=1&rel=0`}
+                  title={`YouTube video ${index + 1}`}
+                  className="w-full h-full"
+                  style={{ aspectRatio: '3/4' }}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            ) : null}
           </div>
         ))}
 

@@ -76,8 +76,9 @@ export interface Database {
           price: number;
           original_price: number | null;
           image_url: string | null;
-          image_urls: string[] | null; // Array of up to 3 image URLs
-          video_urls: string[] | null; // Array of video URLs (support multiple videos)
+          image_urls: string[] | null; // Array of up to 3 image URLs (legacy)
+          video_urls: string[] | null; // Array of video URLs (legacy)
+          ordered_media: any[] | null; // New unlimited ordered media structure
           features: string[];
           description: string | null;  // Product description
           whatsapp_link: string;

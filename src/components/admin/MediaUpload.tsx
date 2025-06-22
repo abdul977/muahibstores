@@ -1,18 +1,17 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { Upload, X, Image as ImageIcon, Video } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, Video, Plus, GripVertical, Youtube, Link } from 'lucide-react';
 import { imageService } from '../../services/imageService';
-import { ProductMedia } from '../../types/Product';
-import { supabase } from '../../lib/supabase';
+import { EnhancedProductMedia, MediaItem, MediaUtils } from '../../types/Product';
 
-interface MediaUploadProps {
-  value: ProductMedia;
-  onChange: (media: ProductMedia) => void;
+interface EnhancedMediaUploadProps {
+  value: EnhancedProductMedia;
+  onChange: (media: EnhancedProductMedia) => void;
   onError?: (error: string) => void;
   className?: string;
   required?: boolean;
 }
 
-const MediaUpload: React.FC<MediaUploadProps> = ({
+const EnhancedMediaUpload: React.FC<EnhancedMediaUploadProps> = ({
   value,
   onChange,
   onError,
@@ -21,410 +20,422 @@ const MediaUpload: React.FC<MediaUploadProps> = ({
 }) => {
   const [uploading, setUploading] = useState<{ [key: string]: boolean }>({});
   const [dragTarget, setDragTarget] = useState<string | null>(null);
-  const imageInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-  const videoInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [draggedItem, setDraggedItem] = useState<string | null>(null);
+  const [youtubeUrl, setYoutubeUrl] = useState('');
+  const [showYoutubeInput, setShowYoutubeInput] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageUpload = useCallback(async (file: File, index: number) => {
-    // Validate image file
-    const validation = imageService.validateImageFile(file);
+  // Add new media item
+  const addMediaItem = useCallback((type: 'image' | 'video' | 'youtube') => {
+    const newItem: MediaItem = {
+      id: MediaUtils.generateMediaId(),
+      type,
+      url: '',
+      order: value.items.length
+    };
+
+    const updatedMedia: EnhancedProductMedia = {
+      ...value,
+      items: [...value.items, newItem]
+    };
+
+    onChange(updatedMedia);
+  }, [value, onChange]);
+
+  // Remove media item
+  const removeMediaItem = useCallback(async (itemId: string) => {
+    const item = value.items.find(i => i.id === itemId);
+    if (item && (item.type === 'image' || item.type === 'video')) {
+      try {
+        if (item.type === 'image') {
+          await imageService.deleteImage(item.url);
+        } else {
+          await imageService.deleteVideo(item.url);
+        }
+      } catch (error) {
+        console.error('Failed to delete media:', error);
+      }
+    }
+
+    const updatedItems = value.items
+      .filter(i => i.id !== itemId)
+      .map((item, index) => ({ ...item, order: index }));
+
+    onChange({
+      ...value,
+      items: updatedItems
+    });
+  }, [value, onChange]);
+
+  // Handle file upload (image or video)
+  const handleFileUpload = useCallback(async (file: File, itemId: string) => {
+    const item = value.items.find(i => i.id === itemId);
+    if (!item) return;
+
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+
+    if (!isImage && !isVideo) {
+      onError?.('Please upload an image or video file');
+      return;
+    }
+
+    try {
+      setUploading(prev => ({ ...prev, [itemId]: true }));
+
+      let result;
+      if (isImage) {
+        const validation = imageService.validateImageFile(file);
+        if (!validation.valid) {
+          onError?.(validation.error || 'Invalid image file');
+          return;
+        }
+        result = await imageService.uploadImage(file, 'products');
+      } else {
+        result = await imageService.uploadVideo(file, 'products');
+      }
+
+      // Update the media item
+      const updatedItems = value.items.map(i =>
+        i.id === itemId
+          ? { ...i, url: result.url, type: isImage ? 'image' as const : 'video' as const }
+          : i
+      );
+
+      onChange({
+        ...value,
+        items: updatedItems
+      });
+
+      onError?.(''); // Clear any previous errors
+    } catch (error) {
+      console.error('File upload error:', error);
+      onError?.(error instanceof Error ? error.message : 'Upload failed');
+    } finally {
+      setUploading(prev => ({ ...prev, [itemId]: false }));
+    }
+  }, [value, onChange, onError]);
+
+  // Handle YouTube URL addition
+  const handleYouTubeAdd = useCallback(() => {
+    if (!youtubeUrl.trim()) {
+      onError?.('Please enter a YouTube URL');
+      return;
+    }
+
+    const validation = imageService.validateYouTubeUrl(youtubeUrl);
     if (!validation.valid) {
-      onError?.(validation.error || 'Invalid image file');
+      onError?.(validation.error || 'Invalid YouTube URL');
       return;
     }
 
-    try {
-      setUploading(prev => ({ ...prev, [`image-${index}`]: true }));
-      
-      // If there's an existing image at this index, delete it first
-      if (value.images[index]) {
-        try {
-          await imageService.deleteImage(value.images[index]);
-        } catch (error) {
-          console.error('Failed to delete old image:', error);
-          // Continue with upload even if deletion fails
-        }
-      }
+    const newItem: MediaItem = {
+      id: MediaUtils.generateMediaId(),
+      type: 'youtube',
+      url: youtubeUrl,
+      order: value.items.length,
+      thumbnail: validation.thumbnailUrl
+    };
 
-      // Upload to Supabase Storage
-      const result = await imageService.uploadImage(file, 'products');
-      
-      // Update the media object
-      const newImages = [...value.images];
-      newImages[index] = result.url;
-      
-      onChange({
-        ...value,
-        images: newImages
-      });
-      
-      onError?.(''); // Clear any previous errors
-    } catch (error) {
-      console.error('Image upload error:', error);
-      onError?.(error instanceof Error ? error.message : 'Image upload failed');
-    } finally {
-      setUploading(prev => ({ ...prev, [`image-${index}`]: false }));
-    }
-  }, [value, onChange, onError]);
+    onChange({
+      ...value,
+      items: [...value.items, newItem]
+    });
 
-  const handleVideoUpload = useCallback(async (file: File, index: number) => {
-    // Validate video file
-    const maxSize = 50 * 1024 * 1024; // 50MB
-    const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+    setYoutubeUrl('');
+    setShowYoutubeInput(false);
+    onError?.(''); // Clear any previous errors
+  }, [youtubeUrl, value, onChange, onError]);
 
-    if (!allowedTypes.includes(file.type)) {
-      onError?.('Invalid video type. Please upload MP4, WebM, or OGG videos.');
-      return;
-    }
+  // Reorder media items
+  const reorderItems = useCallback((fromIndex: number, toIndex: number) => {
+    const items = [...value.items];
+    const [movedItem] = items.splice(fromIndex, 1);
+    items.splice(toIndex, 0, movedItem);
 
-    if (file.size > maxSize) {
-      onError?.('Video file too large. Please upload videos smaller than 50MB.');
-      return;
-    }
+    // Update order values
+    const reorderedItems = items.map((item, index) => ({
+      ...item,
+      order: index
+    }));
 
-    try {
-      setUploading(prev => ({ ...prev, [`video-${index}`]: true }));
+    onChange({
+      ...value,
+      items: reorderedItems
+    });
+  }, [value, onChange]);
 
-      // If there's an existing video at this index, delete it first
-      if (value.videos[index]) {
-        try {
-          await imageService.deleteVideo(value.videos[index]);
-        } catch (error) {
-          console.error('Failed to delete old video:', error);
-          // Continue with upload even if deletion fails
-        }
-      }
-
-      // Upload to Supabase Storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `products/${fileName}`;
-
-      const { data, error } = await supabase.storage
-        .from('videos')
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (error) {
-        throw new Error(`Video upload failed: ${error.message}`);
-      }
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('videos')
-        .getPublicUrl(data.path);
-
-      // Update the media object
-      const newVideos = [...value.videos];
-      newVideos[index] = urlData.publicUrl;
-
-      onChange({
-        ...value,
-        videos: newVideos
-      });
-
-      onError?.(''); // Clear any previous errors
-    } catch (error) {
-      console.error('Video upload error:', error);
-      onError?.(error instanceof Error ? error.message : 'Video upload failed');
-    } finally {
-      setUploading(prev => ({ ...prev, [`video-${index}`]: false }));
-    }
-  }, [value, onChange, onError]);
-
-  const removeImage = useCallback(async (index: number) => {
-    try {
-      // First remove from UI immediately for better UX
-      const newImages = value.images.filter((_, i) => i !== index);
-      onChange({
-        ...value,
-        images: newImages
-      });
-
-      // Then try to delete from storage (don't block UI if this fails)
-      if (value.images[index]) {
-        try {
-          await imageService.deleteImage(value.images[index]);
-        } catch (deleteError) {
-          console.warn('Failed to delete image from storage:', deleteError);
-          // Don't show error to user since image is already removed from UI
-        }
-      }
-
-      onError?.(''); // Clear any previous errors
-    } catch (error) {
-      console.error('Failed to remove image:', error);
-      onError?.(error instanceof Error ? error.message : 'Failed to remove image');
-    }
-  }, [value, onChange, onError]);
-
-  const removeVideo = useCallback(async (index: number) => {
-    try {
-      // First remove from UI immediately for better UX
-      const newVideos = value.videos.filter((_, i) => i !== index);
-      onChange({
-        ...value,
-        videos: newVideos
-      });
-
-      if (videoInputRefs.current[index]) {
-        videoInputRefs.current[index]!.value = '';
-      }
-
-      // Then try to delete from storage (don't block UI if this fails)
-      if (value.videos[index]) {
-        try {
-          await imageService.deleteVideo(value.videos[index]);
-        } catch (deleteError) {
-          console.warn('Failed to delete video from storage:', deleteError);
-          // Don't show error to user since video is already removed from UI
-        }
-      }
-
-      onError?.(''); // Clear any previous errors
-    } catch (error) {
-      console.error('Failed to remove video:', error);
-      onError?.(error instanceof Error ? error.message : 'Failed to remove video');
-    }
-  }, [value, onChange, onError]);
-
-  const handleDragOver = useCallback((e: React.DragEvent, target: string) => {
-    e.preventDefault();
-    setDragTarget(target);
+  // Handle drag and drop for reordering
+  const handleDragStart = useCallback((e: React.DragEvent, itemId: string) => {
+    setDraggedItem(itemId);
+    e.dataTransfer.effectAllowed = 'move';
   }, []);
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, targetItemId: string) => {
+    e.preventDefault();
+
+    if (!draggedItem || draggedItem === targetItemId) {
+      setDraggedItem(null);
+      return;
+    }
+
+    const fromIndex = value.items.findIndex(item => item.id === draggedItem);
+    const toIndex = value.items.findIndex(item => item.id === targetItemId);
+
+    if (fromIndex !== -1 && toIndex !== -1) {
+      reorderItems(fromIndex, toIndex);
+    }
+
+    setDraggedItem(null);
+  }, [draggedItem, value.items, reorderItems]);
+
+  // Handle drag and drop for file uploads
+  const handleFileDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragTarget('file');
+  }, []);
+
+  const handleFileDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setDragTarget(null);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent, target: string, index?: number) => {
+  const handleFileDrop = useCallback((e: React.DragEvent, itemId: string) => {
     e.preventDefault();
     setDragTarget(null);
 
     const files = Array.from(e.dataTransfer.files);
     const file = files[0];
 
-    if (!file) return;
-
-    if (target === 'image' && typeof index === 'number') {
-      if (file.type.startsWith('image/')) {
-        handleImageUpload(file, index);
-      } else {
-        onError?.('Please drop an image file');
-      }
-    } else if (target === 'video' && typeof index === 'number') {
-      if (file.type.startsWith('video/')) {
-        handleVideoUpload(file, index);
-      } else {
-        onError?.('Please drop a video file');
-      }
+    if (file) {
+      handleFileUpload(file, itemId);
     }
-  }, [handleImageUpload, handleVideoUpload, onError]);
+  }, [handleFileUpload]);
 
-  const openImageDialog = (index: number) => {
-    imageInputRefs.current[index]?.click();
-  };
+  // Open file dialog
+  const openFileDialog = useCallback((itemId: string) => {
+    if (fileInputRef.current) {
+      fileInputRef.current.dataset.itemId = itemId;
+      fileInputRef.current.click();
+    }
+  }, []);
 
-  const openVideoDialog = (index: number) => {
-    videoInputRefs.current[index]?.click();
-  };
+  // Handle file input change
+  const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>, itemId: string) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileUpload(file, itemId);
+    }
+    // Reset the input
+    e.target.value = '';
+  }, [handleFileUpload]);
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Images Section */}
-      <div>
-        <h3 className="text-sm font-medium text-gray-900 mb-3">
-          Product Images (up to 3)
-          {required && value.images.length === 0 && <span className="text-red-500 ml-1">*</span>}
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium text-gray-900">
+          Product Media
+          {required && value.items.length === 0 && <span className="text-red-500 ml-1">*</span>}
         </h3>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[0, 1, 2].map((index) => (
-            <div key={index} className="relative">
-              {value.images[index] ? (
-                // Existing image preview
-                <div className="relative group">
-                  <img
-                    src={value.images[index]}
-                    alt={`Product image ${index + 1}`}
-                    className="w-full h-48 object-cover rounded-lg border border-gray-200"
-                  />
-                  {/* Delete button - positioned to avoid overlap */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeImage(index);
-                    }}
-                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 z-10"
-                    title="Delete image"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                  {/* Replace button - positioned to avoid delete button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openImageDialog(index);
-                    }}
-                    className="absolute bottom-2 right-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg px-3 py-2 shadow-lg transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
-                    title="Replace image"
-                  >
-                    <div className="flex items-center space-x-1">
-                      <Upload className="h-4 w-4" />
-                      <span className="text-xs font-medium">Replace</span>
-                    </div>
-                  </button>
-                </div>
-              ) : (
-                // Upload area
-                <div
-                  onDragOver={(e) => handleDragOver(e, 'image')}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, 'image', index)}
-                  onClick={() => openImageDialog(index)}
-                  className={`
-                    relative border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200 h-48 flex flex-col items-center justify-center
-                    ${dragTarget === 'image'
-                      ? 'border-primary-400 bg-primary-50'
-                      : 'border-secondary-300 hover:border-secondary-400 hover:bg-secondary-50'
-                    }
-                    ${uploading[`image-${index}`] ? 'pointer-events-none opacity-50' : ''}
-                  `}
-                >
-                  {uploading[`image-${index}`] ? (
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                      <p className="text-sm text-gray-600">Uploading...</p>
-                    </div>
-                  ) : (
-                    <>
-                      <ImageIcon className="h-8 w-8 text-gray-400 mb-2" />
-                      <p className="text-sm font-medium text-gray-900 mb-1">
-                        Image {index + 1}
-                      </p>
-                      <p className="text-xs text-gray-500 text-center">
-                        Click or drag to upload<br />
-                        PNG, JPG, WebP (max 5MB)
-                      </p>
-                    </>
-                  )}
-                </div>
-              )}
-              
-              {/* Hidden file input */}
-              <input
-                ref={(el) => imageInputRefs.current[index] = el}
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleImageUpload(file, index);
-                }}
-                className="hidden"
-              />
-            </div>
-          ))}
+        <div className="flex space-x-2">
+          <button
+            onClick={() => addMediaItem('image')}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add Image
+          </button>
+          <button
+            onClick={() => addMediaItem('video')}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add Video
+          </button>
+          <button
+            onClick={() => setShowYoutubeInput(true)}
+            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Add YouTube
+          </button>
         </div>
       </div>
 
-      {/* Videos Section */}
-      <div>
-        <h3 className="text-sm font-medium text-gray-900 mb-3">
-          Product Videos (optional, up to 3)
-        </h3>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[0, 1, 2].map((index) => (
-            <div key={index} className="relative">
-              {value.videos[index] ? (
-                // Existing video preview
-                <div className="relative group">
-                  <video
-                    src={value.videos[index]}
-                    controls
-                    className="w-full h-48 object-cover rounded-lg border border-gray-200"
-                  />
-                  {/* Delete button - positioned to avoid overlap */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeVideo(index);
-                    }}
-                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all duration-200 z-10"
-                    title="Delete video"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                  {/* Replace button - positioned to avoid delete button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openVideoDialog(index);
-                    }}
-                    className="absolute bottom-2 right-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg px-3 py-2 shadow-lg transition-all duration-200 opacity-0 group-hover:opacity-100 z-10"
-                    title="Replace video"
-                  >
-                    <div className="flex items-center space-x-1">
-                      <Upload className="h-4 w-4" />
-                      <span className="text-xs font-medium">Replace</span>
-                    </div>
-                  </button>
-                </div>
-              ) : (
-                // Upload area
-                <div
-                  onDragOver={(e) => handleDragOver(e, 'video')}
-                  onDragLeave={handleDragLeave}
-                  onDrop={(e) => handleDrop(e, 'video', index)}
-                  onClick={() => openVideoDialog(index)}
-                  className={`
-                    relative border-2 border-dashed rounded-lg cursor-pointer transition-all duration-200 h-48 flex flex-col items-center justify-center
-                    ${dragTarget === 'video'
-                      ? 'border-primary-400 bg-primary-50'
-                      : 'border-secondary-300 hover:border-secondary-400 hover:bg-secondary-50'
-                    }
-                    ${uploading[`video-${index}`] ? 'pointer-events-none opacity-50' : ''}
-                  `}
-                >
-                  {uploading[`video-${index}`] ? (
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                      <p className="text-sm text-gray-600">Uploading video...</p>
-                    </div>
-                  ) : (
-                    <>
-                      <Video className="h-8 w-8 text-gray-400 mb-2" />
-                      <p className="text-sm font-medium text-gray-900 mb-1">
-                        Video {index + 1}
-                      </p>
-                      <p className="text-xs text-gray-500 text-center">
-                        Click or drag to upload<br />
-                        MP4, WebM, OGG (max 50MB)
-                      </p>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* Hidden file input */}
-              <input
-                ref={(el) => videoInputRefs.current[index] = el}
-                type="file"
-                accept="video/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleVideoUpload(file, index);
-                }}
-                className="hidden"
-              />
-            </div>
-          ))}
+      {/* YouTube URL Input */}
+      {showYoutubeInput && (
+        <div className="bg-gray-50 p-4 rounded-lg border">
+          <div className="flex items-center space-x-2">
+            <Youtube className="h-5 w-5 text-red-600" />
+            <input
+              type="url"
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+              placeholder="Enter YouTube video URL..."
+              className="flex-1 min-w-0 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            />
+            <button
+              onClick={handleYouTubeAdd}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Add
+            </button>
+            <button
+              onClick={() => {
+                setShowYoutubeInput(false);
+                setYoutubeUrl('');
+              }}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
+      )}
+
+      {/* Media Items */}
+      <div className="space-y-4">
+        {value.items.length === 0 ? (
+          <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+            <ImageIcon className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-900">No media added</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              Get started by adding images, videos, or YouTube links
+            </p>
+          </div>
+        ) : (
+          value.items
+            .sort((a, b) => a.order - b.order)
+            .map((item, index) => (
+              <div
+                key={item.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, item.id)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, item.id)}
+                className={`
+                  relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200
+                  ${draggedItem === item.id ? 'opacity-50' : ''}
+                `}
+              >
+                {/* Drag Handle */}
+                <div className="absolute left-2 top-1/2 transform -translate-y-1/2 cursor-move">
+                  <GripVertical className="h-5 w-5 text-gray-400" />
+                </div>
+
+                <div className="ml-8 flex items-center space-x-4">
+                  {/* Media Preview */}
+                  <div className="flex-shrink-0">
+                    {item.url ? (
+                      <div className="relative group">
+                        {item.type === 'image' && (
+                          <img
+                            src={item.url}
+                            alt="Media preview"
+                            className="h-20 w-20 object-cover rounded-lg border border-gray-200"
+                          />
+                        )}
+                        {item.type === 'video' && (
+                          <video
+                            src={item.url}
+                            className="h-20 w-20 object-cover rounded-lg border border-gray-200"
+                          />
+                        )}
+                        {item.type === 'youtube' && (
+                          <div className="h-20 w-20 bg-red-100 rounded-lg border border-gray-200 flex items-center justify-center">
+                            <Youtube className="h-8 w-8 text-red-600" />
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div
+                        onDragOver={handleFileDragOver}
+                        onDragLeave={handleFileDragLeave}
+                        onDrop={(e) => handleFileDrop(e, item.id)}
+                        onClick={() => openFileDialog(item.id)}
+                        className={`
+                          h-20 w-20 border-2 border-dashed rounded-lg cursor-pointer flex items-center justify-center transition-colors duration-200
+                          ${dragTarget === 'file' ? 'border-primary-400 bg-primary-50' : 'border-gray-300 hover:border-gray-400'}
+                          ${uploading[item.id] ? 'pointer-events-none opacity-50' : ''}
+                        `}
+                      >
+                        {uploading[item.id] ? (
+                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600"></div>
+                        ) : (
+                          <>
+                            {item.type === 'image' && <ImageIcon className="h-6 w-6 text-gray-400" />}
+                            {item.type === 'video' && <Video className="h-6 w-6 text-gray-400" />}
+                            {item.type === 'youtube' && <Youtube className="h-6 w-6 text-gray-400" />}
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Media Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 capitalize">
+                        {item.type}
+                      </span>
+                      <span className="text-sm text-gray-500">Position {index + 1}</span>
+                    </div>
+                    {item.url ? (
+                      <p className="mt-1 text-sm text-gray-900 truncate">{item.url}</p>
+                    ) : (
+                      <p className="mt-1 text-sm text-gray-500">
+                        {item.type === 'youtube' ? 'Click to add YouTube URL' : 'Click or drag to upload'}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center space-x-2">
+                    {item.url && (
+                      <button
+                        onClick={() => openFileDialog(item.id)}
+                        className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                      >
+                        <Upload className="h-3 w-3 mr-1" />
+                        Replace
+                      </button>
+                    )}
+                    <button
+                      onClick={() => removeMediaItem(item.id)}
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+        )}
       </div>
+
+      {/* Hidden file input for uploads */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,video/*"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          const itemId = e.target.dataset.itemId;
+          if (file && itemId) {
+            handleFileInputChange(e, itemId);
+          }
+        }}
+        className="hidden"
+      />
     </div>
   );
 };
 
-export default MediaUpload;
+export default EnhancedMediaUpload;

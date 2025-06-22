@@ -93,16 +93,26 @@ const ProductDetailPage: React.FC = () => {
     }).format(price).replace('NGN', '₦');
   };
 
-  // Get all available media (images + videos) for the product
+  // Get all available media (images + videos + youtube) for the product
   const getProductMedia = () => {
     if (!product) return [];
-    const media = [];
 
-    // Add images
+    // Use enhanced media if available
+    if (product.enhancedMedia?.items && product.enhancedMedia.items.length > 0) {
+      return product.enhancedMedia.items
+        .sort((a, b) => a.order - b.order)
+        .map(item => ({
+          type: item.type,
+          url: item.url,
+          thumbnail: item.thumbnail
+        }));
+    }
+
+    // Fallback to legacy media structure
+    const media = [];
     const images = product.media?.images || (product.image ? [product.image] : []);
     images.forEach(url => media.push({ type: 'image' as const, url }));
 
-    // Add videos if available
     const videos = product.media?.videos || [];
     videos.forEach(url => media.push({ type: 'video' as const, url }));
 
@@ -194,14 +204,25 @@ const ProductDetailPage: React.FC = () => {
                               alt={`${product.name} - Image ${currentImageIndex + 1}`}
                               className="w-full h-full object-cover transition-opacity duration-300"
                             />
-                          ) : (
+                          ) : currentMedia.type === 'video' ? (
                             <video
                               src={currentMedia.url}
                               controls
                               className="w-full h-full object-cover"
                               poster={getProductImages()[0]} // Use first image as poster if available
                             />
-                          )}
+                          ) : currentMedia.type === 'youtube' ? (
+                            <div className="w-full h-full relative">
+                              <iframe
+                                src={`https://www.youtube.com/embed/${currentMedia.url.includes('youtube.com') || currentMedia.url.includes('youtu.be') ? currentMedia.url.split('v=')[1]?.split('&')[0] || currentMedia.url.split('/').pop() : currentMedia.url}?autoplay=0&controls=1&rel=0`}
+                                title={`${product.name} - YouTube video ${currentImageIndex + 1}`}
+                                className="w-full h-full"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                              />
+                            </div>
+                          ) : null}
                         </>
                       )}
 
@@ -286,7 +307,7 @@ const ProductDetailPage: React.FC = () => {
                                     alt={`${product.name} thumbnail ${actualIndex + 1}`}
                                     className="w-full h-full object-cover"
                                   />
-                                ) : (
+                                ) : mediaItem.type === 'video' ? (
                                   <div className="relative w-full h-full bg-gray-900">
                                     <video
                                       src={mediaItem.url}
@@ -300,7 +321,27 @@ const ProductDetailPage: React.FC = () => {
                                       </div>
                                     </div>
                                   </div>
-                                )}
+                                ) : mediaItem.type === 'youtube' ? (
+                                  <div className="relative w-full h-full bg-red-100">
+                                    {mediaItem.thumbnail ? (
+                                      <img
+                                        src={mediaItem.thumbnail}
+                                        alt={`${product.name} YouTube thumbnail ${actualIndex + 1}`}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center bg-red-100">
+                                        <div className="text-red-600 text-xs font-medium">YouTube</div>
+                                      </div>
+                                    )}
+                                    {/* YouTube play icon overlay */}
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                                      <div className="w-6 h-6 bg-red-600 rounded-sm flex items-center justify-center">
+                                        <Play className="w-3 h-3 text-white fill-current ml-0.5" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                ) : null}
                                 {actualIndex === currentImageIndex && (
                                   <div className="absolute inset-0 bg-blue-500/20"></div>
                                 )}

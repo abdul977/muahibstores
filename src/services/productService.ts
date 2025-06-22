@@ -1,5 +1,5 @@
 import { supabase } from '../lib/supabase';
-import { Product, ProductMedia } from '../types/Product';
+import { Product, ProductMedia, EnhancedProductMedia, MediaUtils } from '../types/Product';
 
 // Database row type (matches Supabase schema)
 interface ProductRow {
@@ -11,6 +11,7 @@ interface ProductRow {
   image_url: string | null;
   image_urls: string[] | null;
   video_urls: string[] | null;
+  ordered_media: any[] | null; // New enhanced media structure
   features: string[];
   description: string | null;
   whatsapp_link: string;
@@ -24,8 +25,8 @@ interface ProductRow {
 
 // Convert database row to frontend Product type
 const mapRowToProduct = (row: ProductRow): Product => {
-  // Create media object from new fields, fallback to legacy image field
-  const media: ProductMedia = {
+  // Create legacy media object from old fields for backward compatibility
+  const legacyMedia: ProductMedia = {
     images: row.image_urls && row.image_urls.length > 0
       ? row.image_urls
       : row.image_url
@@ -34,13 +35,35 @@ const mapRowToProduct = (row: ProductRow): Product => {
     videos: row.video_urls || []
   };
 
+  // Create enhanced media object from ordered_media field
+  let enhancedMedia: EnhancedProductMedia | undefined;
+  if (row.ordered_media && Array.isArray(row.ordered_media) && row.ordered_media.length > 0) {
+    enhancedMedia = {
+      items: row.ordered_media.map((item: any) => ({
+        id: item.id || MediaUtils.generateMediaId(),
+        type: item.type || 'image',
+        url: item.url || '',
+        order: item.order || 0,
+        title: item.title,
+        thumbnail: item.thumbnail
+      })).sort((a: any, b: any) => a.order - b.order),
+      // Keep legacy fields for backward compatibility
+      images: legacyMedia.images,
+      videos: legacyMedia.videos
+    };
+  } else if (legacyMedia.images.length > 0 || legacyMedia.videos.length > 0) {
+    // Convert legacy media to enhanced format
+    enhancedMedia = MediaUtils.legacyToEnhanced(legacyMedia);
+  }
+
   return {
     id: row.original_id || row.id,
     name: row.name,
     price: row.price,
     originalPrice: row.original_price || undefined,
-    image: media.images[0] || '', // First image for backward compatibility
-    media,
+    image: enhancedMedia?.items.find(item => item.type === 'image')?.url || legacyMedia.images[0] || '',
+    media: legacyMedia, // Keep for backward compatibility
+    enhancedMedia,
     features: row.features,
     description: row.description || undefined,
     whatsappLink: row.whatsapp_link,
@@ -52,22 +75,53 @@ const mapRowToProduct = (row: ProductRow): Product => {
 };
 
 // Convert frontend Product to database insert format
-const mapProductToInsert = (product: Omit<Product, 'id'> & { id?: string }) => ({
-  original_id: product.id,
-  name: product.name,
-  price: product.price,
-  original_price: product.originalPrice || null,
-  image_url: product.media?.images[0] || product.image || null, // Use first image from media or fallback
-  image_urls: product.media?.images || (product.image ? [product.image] : []),
-  video_urls: product.media?.videos || [],
-  features: product.features,
-  description: product.description || null,
-  whatsapp_link: product.whatsappLink,
-  category: product.category,
-  is_new: product.isNew || false,
-  is_featured: product.isFeatured || false,
-  is_hidden: product.isHidden || false,
-});
+const mapProductToInsert = (product: Omit<Product, 'id'> & { id?: string }) => {
+  // Determine which media structure to use
+  const enhancedMedia = product.enhancedMedia;
+  const legacyMedia = product.media;
+
+  // Get legacy arrays for backward compatibility
+  let images: string[] = [];
+  let videos: string[] = [];
+
+  if (enhancedMedia?.items && enhancedMedia.items.length > 0) {
+    // Use enhanced media structure
+    images = enhancedMedia.items
+      .filter(item => item.type === 'image')
+      .sort((a, b) => a.order - b.order)
+      .map(item => item.url);
+
+    videos = enhancedMedia.items
+      .filter(item => item.type === 'video')
+      .sort((a, b) => a.order - b.order)
+      .map(item => item.url);
+  } else if (legacyMedia) {
+    // Fallback to legacy media
+    images = legacyMedia.images || [];
+    videos = legacyMedia.videos || [];
+  } else if (product.image) {
+    // Fallback to single image field
+    images = [product.image];
+  }
+
+  return {
+    original_id: product.id,
+    name: product.name,
+    price: product.price,
+    original_price: product.originalPrice || null,
+    image_url: images[0] || null, // First image for backward compatibility
+    image_urls: images,
+    video_urls: videos,
+    ordered_media: enhancedMedia?.items ? JSON.stringify(enhancedMedia.items) : null,
+    features: product.features,
+    description: product.description || null,
+    whatsapp_link: product.whatsappLink,
+    category: product.category,
+    is_new: product.isNew || false,
+    is_featured: product.isFeatured || false,
+    is_hidden: product.isHidden || false,
+  };
+};
 
 export const productService = {
   // Get all products

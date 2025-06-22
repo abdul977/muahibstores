@@ -1,8 +1,21 @@
 import { supabase } from '../lib/supabase';
+import { MediaUtils } from '../types/Product';
 
 export interface UploadResult {
   url: string;
   path: string;
+}
+
+export interface VideoUploadResult extends UploadResult {
+  thumbnail?: string;
+}
+
+export interface YouTubeValidationResult {
+  valid: boolean;
+  videoId?: string;
+  thumbnailUrl?: string;
+  embedUrl?: string;
+  error?: string;
 }
 
 export const imageService = {
@@ -119,6 +132,104 @@ export const imageService = {
     }
 
     return { valid: true };
+  },
+
+  // Upload video to Supabase Storage
+  async uploadVideo(file: File, folder: string = 'products'): Promise<VideoUploadResult> {
+    try {
+      // Validate video file
+      const validation = this.validateVideoFile(file);
+      if (!validation.valid) {
+        throw new Error(validation.error || 'Invalid video file');
+      }
+
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${folder}/${fileName}`;
+
+      // Upload file to Supabase Storage
+      const { data, error } = await supabase.storage
+        .from('videos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        throw new Error(`Video upload failed: ${error.message}`);
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('videos')
+        .getPublicUrl(data.path);
+
+      return {
+        url: urlData.publicUrl,
+        path: data.path
+      };
+    } catch (error) {
+      console.error('Video upload error:', error);
+      throw new Error(`Failed to upload video: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  },
+
+  // Validate video file
+  validateVideoFile(file: File): { valid: boolean; error?: string } {
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/avi', 'video/mov'];
+
+    if (!allowedTypes.includes(file.type)) {
+      return {
+        valid: false,
+        error: 'Invalid video type. Please upload MP4, WebM, OGG, AVI, or MOV videos.'
+      };
+    }
+
+    if (file.size > maxSize) {
+      return {
+        valid: false,
+        error: 'Video file too large. Please upload videos smaller than 50MB.'
+      };
+    }
+
+    return { valid: true };
+  },
+
+  // Validate and process YouTube URL
+  validateYouTubeUrl(url: string): YouTubeValidationResult {
+    try {
+      if (!url || typeof url !== 'string') {
+        return {
+          valid: false,
+          error: 'Please provide a valid YouTube URL'
+        };
+      }
+
+      const videoId = MediaUtils.getYouTubeVideoId(url);
+      if (!videoId) {
+        return {
+          valid: false,
+          error: 'Invalid YouTube URL. Please use a valid YouTube video link.'
+        };
+      }
+
+      const thumbnailUrl = MediaUtils.getYouTubeThumbnail(url);
+      const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+
+      return {
+        valid: true,
+        videoId,
+        thumbnailUrl,
+        embedUrl
+      };
+    } catch (error) {
+      return {
+        valid: false,
+        error: 'Failed to validate YouTube URL'
+      };
+    }
   },
 
   // Extract path from Supabase Storage URL
