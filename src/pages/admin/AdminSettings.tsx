@@ -252,29 +252,37 @@ const AdminSettings: React.FC = () => {
 
       {/* Tabs */}
       <div className="border-b border-secondary-200">
-        <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`py-2 px-1 border-b-2 font-medium text-sm flex items-center space-x-2 ${
-                  activeTab === tab.id
-                    ? 'border-primary-500 text-primary-600'
-                    : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{tab.name}</span>
-              </button>
-            );
-          })}
+        <nav className="-mb-px flex overflow-x-auto">
+          <div className="flex space-x-2 sm:space-x-8 min-w-max px-1">
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`py-2 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm flex items-center space-x-1 sm:space-x-2 whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'border-primary-500 text-primary-600'
+                      : 'border-transparent text-secondary-500 hover:text-secondary-700 hover:border-secondary-300'
+                  }`}
+                >
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">{tab.name}</span>
+                  <span className="sm:hidden">
+                    {tab.name === 'WhatsApp Numbers' ? 'WhatsApp' :
+                     tab.name === 'General' ? 'General' :
+                     tab.name === 'Database' ? 'Database' :
+                     tab.name === 'Storage' ? 'Storage' : 'Backup'}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </nav>
       </div>
 
       {/* Tab Content */}
-      <div className="bg-white rounded-lg shadow-sm border border-secondary-200 p-6">
+      <div className="bg-white rounded-lg shadow-sm border border-secondary-200 p-4 sm:p-6">
         {activeTab === 'general' && (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-secondary-900">Supabase Configuration</h3>
@@ -400,65 +408,66 @@ const AdminSettings: React.FC = () => {
         )}
 
         {activeTab === 'whatsapp' && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
+          <div className="space-y-4 sm:space-y-6">
+            <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
               <h3 className="text-lg font-semibold text-secondary-900">WhatsApp Numbers</h3>
               <button
                 onClick={handleExportWhatsApp}
                 disabled={loading}
-                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
               >
                 <Download className="h-4 w-4" />
-                <span>Export CSV</span>
+                <span className="hidden sm:inline">Export CSV</span>
+                <span className="sm:hidden">Export</span>
                 {loading && <RefreshCw className="h-4 w-4 animate-spin" />}
               </button>
             </div>
 
             {/* Statistics Cards */}
             {whatsappStats && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-2xl font-bold text-green-600">{whatsappStats.totalNumbers}</div>
-                      <div className="text-sm text-green-700">Total Numbers</div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="bg-green-50 p-3 sm:p-4 rounded-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div className="mb-2 sm:mb-0">
+                      <div className="text-xl sm:text-2xl font-bold text-green-600">{whatsappStats.totalNumbers}</div>
+                      <div className="text-xs sm:text-sm text-green-700">Total Numbers</div>
                     </div>
-                    <Users className="h-8 w-8 text-green-500" />
+                    <Users className="h-6 w-6 sm:h-8 sm:w-8 text-green-500 self-end sm:self-auto" />
                   </div>
                 </div>
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-2xl font-bold text-blue-600">{whatsappStats.todayNumbers}</div>
-                      <div className="text-sm text-blue-700">Today</div>
+                <div className="bg-blue-50 p-3 sm:p-4 rounded-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div className="mb-2 sm:mb-0">
+                      <div className="text-xl sm:text-2xl font-bold text-blue-600">{whatsappStats.todayNumbers}</div>
+                      <div className="text-xs sm:text-sm text-blue-700">Today</div>
                     </div>
-                    <TrendingUp className="h-8 w-8 text-blue-500" />
+                    <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-blue-500 self-end sm:self-auto" />
                   </div>
                 </div>
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-2xl font-bold text-purple-600">{whatsappStats.weekNumbers}</div>
-                      <div className="text-sm text-purple-700">This Week</div>
+                <div className="bg-purple-50 p-3 sm:p-4 rounded-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div className="mb-2 sm:mb-0">
+                      <div className="text-xl sm:text-2xl font-bold text-purple-600">{whatsappStats.weekNumbers}</div>
+                      <div className="text-xs sm:text-sm text-purple-700">This Week</div>
                     </div>
-                    <Calendar className="h-8 w-8 text-purple-500" />
+                    <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-purple-500 self-end sm:self-auto" />
                   </div>
                 </div>
-                <div className="bg-orange-50 p-4 rounded-lg">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-2xl font-bold text-orange-600">{whatsappStats.mobilePercentage}%</div>
-                      <div className="text-sm text-orange-700">Mobile Users</div>
+                <div className="bg-orange-50 p-3 sm:p-4 rounded-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                    <div className="mb-2 sm:mb-0">
+                      <div className="text-xl sm:text-2xl font-bold text-orange-600">{whatsappStats.mobilePercentage}%</div>
+                      <div className="text-xs sm:text-sm text-orange-700">Mobile Users</div>
                     </div>
-                    <Smartphone className="h-8 w-8 text-orange-500" />
+                    <Smartphone className="h-6 w-6 sm:h-8 sm:w-8 text-orange-500 self-end sm:self-auto" />
                   </div>
                 </div>
               </div>
             )}
 
             {/* Filters */}
-            <div className="bg-white border border-secondary-200 rounded-lg p-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white border border-secondary-200 rounded-lg p-3 sm:p-4">
+              <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-1 md:grid-cols-3 sm:gap-4">
                 <div>
                   <label className="block text-sm font-medium text-secondary-700 mb-2">
                     <Search className="inline h-4 w-4 mr-1" />
@@ -469,7 +478,7 @@ const AdminSettings: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search numbers or pages..."
-                    className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-3 py-2 text-sm border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   />
                 </div>
                 <div>
@@ -480,7 +489,7 @@ const AdminSettings: React.FC = () => {
                   <select
                     value={deviceFilter}
                     onChange={(e) => setDeviceFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-3 py-2 text-sm border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   >
                     <option value="">All Devices</option>
                     <option value="mobile">Mobile</option>
@@ -497,7 +506,7 @@ const AdminSettings: React.FC = () => {
                     type="date"
                     value={dateFilter}
                     onChange={(e) => setDateFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-3 py-2 text-sm border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   />
                 </div>
               </div>
@@ -505,23 +514,81 @@ const AdminSettings: React.FC = () => {
 
             {/* WhatsApp Numbers Table */}
             <div className="bg-white border border-secondary-200 rounded-lg overflow-hidden">
-              <div className="px-4 py-3 border-b border-secondary-200">
-                <h4 className="font-medium text-secondary-900">Collected Numbers ({totalNumbers})</h4>
+              <div className="px-3 sm:px-4 py-3 border-b border-secondary-200">
+                <h4 className="font-medium text-secondary-900 text-sm sm:text-base">Collected Numbers ({totalNumbers})</h4>
               </div>
 
               {whatsappLoading ? (
-                <div className="p-8 text-center">
-                  <RefreshCw className="h-8 w-8 animate-spin mx-auto text-secondary-400" />
-                  <p className="mt-2 text-secondary-600">Loading WhatsApp numbers...</p>
+                <div className="p-6 sm:p-8 text-center">
+                  <RefreshCw className="h-6 w-6 sm:h-8 sm:w-8 animate-spin mx-auto text-secondary-400" />
+                  <p className="mt-2 text-sm sm:text-base text-secondary-600">Loading WhatsApp numbers...</p>
                 </div>
               ) : whatsappNumbers.length === 0 ? (
-                <div className="p-8 text-center">
-                  <MessageCircle className="h-12 w-12 mx-auto text-secondary-300" />
-                  <p className="mt-2 text-secondary-600">No WhatsApp numbers found</p>
+                <div className="p-6 sm:p-8 text-center">
+                  <MessageCircle className="h-8 w-8 sm:h-12 sm:w-12 mx-auto text-secondary-300" />
+                  <p className="mt-2 text-sm sm:text-base text-secondary-600">No WhatsApp numbers found</p>
                 </div>
               ) : (
                 <>
-                  <div className="overflow-x-auto">
+                  {/* Mobile Card Layout */}
+                  <div className="block sm:hidden">
+                    <div className="divide-y divide-secondary-200">
+                      {whatsappNumbers.map((entry) => (
+                        <div key={entry.id} className="p-4 space-y-3">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <span className="font-medium text-secondary-900 text-sm">{entry.whatsapp_number}</span>
+                              <button
+                                onClick={() => copyToClipboard(entry.whatsapp_number)}
+                                className="text-secondary-400 hover:text-secondary-600"
+                                title="Copy number"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </button>
+                            </div>
+                            <a
+                              href={`https://wa.me/${entry.whatsapp_number.replace('+', '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-green-600 hover:text-green-800"
+                              title="Open in WhatsApp"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3 text-xs">
+                            <div>
+                              <span className="text-secondary-500 font-medium">Source:</span>
+                              <div className="text-secondary-700 mt-1">{entry.source_page}</div>
+                            </div>
+                            <div>
+                              <span className="text-secondary-500 font-medium">Device:</span>
+                              <div className="flex items-center space-x-1 mt-1">
+                                {entry.is_mobile ? (
+                                  <Smartphone className="h-3 w-3 text-blue-500" />
+                                ) : (
+                                  <div className="h-3 w-3 bg-secondary-300 rounded-sm" />
+                                )}
+                                <span className="text-secondary-700 capitalize">{entry.device_type}</span>
+                              </div>
+                            </div>
+                            <div>
+                              <span className="text-secondary-500 font-medium">UTM Source:</span>
+                              <div className="text-secondary-700 mt-1">{entry.utm_source || '-'}</div>
+                            </div>
+                            <div>
+                              <span className="text-secondary-500 font-medium">Date:</span>
+                              <div className="text-secondary-700 mt-1">{new Date(entry.created_at).toLocaleDateString()}</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Desktop Table Layout */}
+                  <div className="hidden sm:block overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-secondary-50">
                         <tr>
@@ -602,28 +669,30 @@ const AdminSettings: React.FC = () => {
 
                   {/* Pagination */}
                   {totalNumbers > itemsPerPage && (
-                    <div className="px-4 py-3 border-t border-secondary-200 flex items-center justify-between">
-                      <div className="text-sm text-secondary-600">
-                        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalNumbers)} of {totalNumbers} entries
-                      </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                          disabled={currentPage === 1}
-                          className="px-3 py-1 border border-secondary-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary-50"
-                        >
-                          Previous
-                        </button>
-                        <span className="px-3 py-1 text-sm text-secondary-600">
-                          Page {currentPage} of {Math.ceil(totalNumbers / itemsPerPage)}
-                        </span>
-                        <button
-                          onClick={() => setCurrentPage(Math.min(Math.ceil(totalNumbers / itemsPerPage), currentPage + 1))}
-                          disabled={currentPage >= Math.ceil(totalNumbers / itemsPerPage)}
-                          className="px-3 py-1 border border-secondary-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary-50"
-                        >
-                          Next
-                        </button>
+                    <div className="px-3 sm:px-4 py-3 border-t border-secondary-200">
+                      <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="text-xs sm:text-sm text-secondary-600 text-center sm:text-left">
+                          Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalNumbers)} of {totalNumbers} entries
+                        </div>
+                        <div className="flex items-center justify-center space-x-2">
+                          <button
+                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                            disabled={currentPage === 1}
+                            className="px-2 sm:px-3 py-1 border border-secondary-300 rounded text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary-50"
+                          >
+                            Prev
+                          </button>
+                          <span className="px-2 sm:px-3 py-1 text-xs sm:text-sm text-secondary-600">
+                            <span className="hidden sm:inline">Page </span>{currentPage} of {Math.ceil(totalNumbers / itemsPerPage)}
+                          </span>
+                          <button
+                            onClick={() => setCurrentPage(Math.min(Math.ceil(totalNumbers / itemsPerPage), currentPage + 1))}
+                            disabled={currentPage >= Math.ceil(totalNumbers / itemsPerPage)}
+                            className="px-2 sm:px-3 py-1 border border-secondary-300 rounded text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary-50"
+                          >
+                            Next
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
