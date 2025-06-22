@@ -5,6 +5,7 @@ import './index.css';
 
 // Import validation tests for development
 import { runValidationTests } from './utils/testValidation';
+import { testWhatsAppPopup } from './utils/testWhatsAppPopup';
 
 // Run validation tests in development
 if (import.meta.env.DEV) {
@@ -16,6 +17,11 @@ if (import.meta.env.DEV) {
         console.error('❌ Some validation tests failed');
       }
     });
+
+    // Run WhatsApp popup tests
+    setTimeout(() => {
+      testWhatsAppPopup();
+    }, 1000);
   }, 2000); // Wait 2 seconds for app to initialize
 }
 

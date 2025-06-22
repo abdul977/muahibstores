@@ -13,6 +13,61 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export interface Database {
   public: {
     Tables: {
+      visitor_whatsapp_numbers: {
+        Row: {
+          id: string;
+          whatsapp_number: string;
+          country_code: string;
+          source_page: string;
+          source_url: string;
+          user_agent: string;
+          ip_address?: string;
+          browser_fingerprint: string;
+          referrer: string;
+          utm_source?: string;
+          utm_medium?: string;
+          utm_campaign?: string;
+          device_type: string;
+          is_mobile: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          whatsapp_number: string;
+          country_code?: string;
+          source_page: string;
+          source_url: string;
+          user_agent: string;
+          ip_address?: string;
+          browser_fingerprint: string;
+          referrer: string;
+          utm_source?: string;
+          utm_medium?: string;
+          utm_campaign?: string;
+          device_type: string;
+          is_mobile?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          whatsapp_number?: string;
+          country_code?: string;
+          source_page?: string;
+          source_url?: string;
+          user_agent?: string;
+          ip_address?: string;
+          browser_fingerprint?: string;
+          referrer?: string;
+          utm_source?: string;
+          utm_medium?: string;
+          utm_campaign?: string;
+          device_type?: string;
+          is_mobile?: boolean;
+          updated_at?: string;
+        };
+      };
       products: {
         Row: {
           id: string;

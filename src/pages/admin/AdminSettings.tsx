@@ -11,9 +11,19 @@ import {
   Info,
   Server,
   Key,
-  Globe
+  Globe,
+  MessageCircle,
+  Search,
+  Filter,
+  Calendar,
+  Copy,
+  ExternalLink,
+  Users,
+  Smartphone,
+  TrendingUp
 } from 'lucide-react';
 import { mcpService, DatabaseStats } from '../../services/mcpService';
+import { whatsappNumbersService, WhatsAppNumberEntry, WhatsAppNumbersStats } from '../../services/whatsappNumbersService';
 
 interface SupabaseConfig {
   url: string;
@@ -25,9 +35,20 @@ interface SupabaseConfig {
 
 
 const AdminSettings: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'general' | 'database' | 'storage' | 'backup'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'database' | 'storage' | 'backup' | 'whatsapp'>('general');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+
+  // WhatsApp Numbers state
+  const [whatsappNumbers, setWhatsappNumbers] = useState<WhatsAppNumberEntry[]>([]);
+  const [whatsappStats, setWhatsappStats] = useState<WhatsAppNumbersStats | null>(null);
+  const [whatsappLoading, setWhatsappLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState('');
+  const [deviceFilter, setDeviceFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalNumbers, setTotalNumbers] = useState(0);
+  const itemsPerPage = 20;
   
   // Supabase configuration
   const [supabaseConfig, setSupabaseConfig] = useState<SupabaseConfig>({
@@ -131,11 +152,80 @@ const AdminSettings: React.FC = () => {
     }
   };
 
+  // Load WhatsApp numbers when tab is active
+  useEffect(() => {
+    if (activeTab === 'whatsapp') {
+      loadWhatsAppData();
+    }
+  }, [activeTab, currentPage, searchTerm, dateFilter, deviceFilter]);
+
+  const loadWhatsAppData = async () => {
+    setWhatsappLoading(true);
+    try {
+      // Load statistics
+      const stats = await whatsappNumbersService.getWhatsAppNumbersStats();
+      setWhatsappStats(stats);
+
+      // Load numbers with filters
+      const filters = {
+        search: searchTerm || undefined,
+        deviceType: deviceFilter || undefined,
+        dateFrom: dateFilter || undefined,
+        limit: itemsPerPage,
+        offset: (currentPage - 1) * itemsPerPage
+      };
+
+      const { data, total } = await whatsappNumbersService.getWhatsAppNumbers(filters);
+      setWhatsappNumbers(data);
+      setTotalNumbers(total);
+    } catch (error) {
+      console.error('Error loading WhatsApp data:', error);
+      setMessage({ type: 'error', text: 'Failed to load WhatsApp numbers' });
+    } finally {
+      setWhatsappLoading(false);
+    }
+  };
+
+  const handleExportWhatsApp = async () => {
+    try {
+      setLoading(true);
+      const csvData = await whatsappNumbersService.exportWhatsAppNumbers({
+        search: searchTerm || undefined,
+        deviceType: deviceFilter || undefined,
+        dateFrom: dateFilter || undefined
+      });
+
+      const blob = new Blob([csvData], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `whatsapp-numbers-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+
+      setMessage({ type: 'success', text: 'WhatsApp numbers exported successfully!' });
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to export WhatsApp numbers' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setMessage({ type: 'success', text: 'Copied to clipboard!' });
+      setTimeout(() => setMessage(null), 2000);
+    });
+  };
+
   const tabs = [
     { id: 'general', name: 'General', icon: Settings },
     { id: 'database', name: 'Database', icon: Database },
     { id: 'storage', name: 'Storage', icon: Upload },
-    { id: 'backup', name: 'Backup', icon: Download }
+    { id: 'backup', name: 'Backup', icon: Download },
+    { id: 'whatsapp', name: 'WhatsApp Numbers', icon: MessageCircle }
   ];
 
   return (
@@ -288,7 +378,7 @@ const AdminSettings: React.FC = () => {
         {activeTab === 'backup' && (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold text-secondary-900">Backup & Restore</h3>
-            
+
             <div className="bg-secondary-50 p-4 rounded-lg">
               <div className="flex items-center justify-between">
                 <div>
@@ -305,6 +395,240 @@ const AdminSettings: React.FC = () => {
                   {loading && <RefreshCw className="h-4 w-4 animate-spin" />}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'whatsapp' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-secondary-900">WhatsApp Numbers</h3>
+              <button
+                onClick={handleExportWhatsApp}
+                disabled={loading}
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Download className="h-4 w-4" />
+                <span>Export CSV</span>
+                {loading && <RefreshCw className="h-4 w-4 animate-spin" />}
+              </button>
+            </div>
+
+            {/* Statistics Cards */}
+            {whatsappStats && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-2xl font-bold text-green-600">{whatsappStats.totalNumbers}</div>
+                      <div className="text-sm text-green-700">Total Numbers</div>
+                    </div>
+                    <Users className="h-8 w-8 text-green-500" />
+                  </div>
+                </div>
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-2xl font-bold text-blue-600">{whatsappStats.todayNumbers}</div>
+                      <div className="text-sm text-blue-700">Today</div>
+                    </div>
+                    <TrendingUp className="h-8 w-8 text-blue-500" />
+                  </div>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-2xl font-bold text-purple-600">{whatsappStats.weekNumbers}</div>
+                      <div className="text-sm text-purple-700">This Week</div>
+                    </div>
+                    <Calendar className="h-8 w-8 text-purple-500" />
+                  </div>
+                </div>
+                <div className="bg-orange-50 p-4 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-2xl font-bold text-orange-600">{whatsappStats.mobilePercentage}%</div>
+                      <div className="text-sm text-orange-700">Mobile Users</div>
+                    </div>
+                    <Smartphone className="h-8 w-8 text-orange-500" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Filters */}
+            <div className="bg-white border border-secondary-200 rounded-lg p-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    <Search className="inline h-4 w-4 mr-1" />
+                    Search
+                  </label>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search numbers or pages..."
+                    className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    <Filter className="inline h-4 w-4 mr-1" />
+                    Device Type
+                  </label>
+                  <select
+                    value={deviceFilter}
+                    onChange={(e) => setDeviceFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    <option value="">All Devices</option>
+                    <option value="mobile">Mobile</option>
+                    <option value="desktop">Desktop</option>
+                    <option value="tablet">Tablet</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-secondary-700 mb-2">
+                    <Calendar className="inline h-4 w-4 mr-1" />
+                    Date From
+                  </label>
+                  <input
+                    type="date"
+                    value={dateFilter}
+                    onChange={(e) => setDateFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-secondary-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* WhatsApp Numbers Table */}
+            <div className="bg-white border border-secondary-200 rounded-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-secondary-200">
+                <h4 className="font-medium text-secondary-900">Collected Numbers ({totalNumbers})</h4>
+              </div>
+
+              {whatsappLoading ? (
+                <div className="p-8 text-center">
+                  <RefreshCw className="h-8 w-8 animate-spin mx-auto text-secondary-400" />
+                  <p className="mt-2 text-secondary-600">Loading WhatsApp numbers...</p>
+                </div>
+              ) : whatsappNumbers.length === 0 ? (
+                <div className="p-8 text-center">
+                  <MessageCircle className="h-12 w-12 mx-auto text-secondary-300" />
+                  <p className="mt-2 text-secondary-600">No WhatsApp numbers found</p>
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-secondary-50">
+                        <tr>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
+                            WhatsApp Number
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
+                            Source Page
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
+                            Device
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
+                            UTM Source
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
+                            Date
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-secondary-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-secondary-200">
+                        {whatsappNumbers.map((entry) => (
+                          <tr key={entry.id} className="hover:bg-secondary-50">
+                            <td className="px-4 py-3">
+                              <div className="flex items-center space-x-2">
+                                <span className="font-medium text-secondary-900">{entry.whatsapp_number}</span>
+                                <button
+                                  onClick={() => copyToClipboard(entry.whatsapp_number)}
+                                  className="text-secondary-400 hover:text-secondary-600"
+                                  title="Copy number"
+                                >
+                                  <Copy className="h-4 w-4" />
+                                </button>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-secondary-600">
+                              {entry.source_page}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center space-x-1">
+                                {entry.is_mobile ? (
+                                  <Smartphone className="h-4 w-4 text-blue-500" />
+                                ) : (
+                                  <div className="h-4 w-4 bg-secondary-300 rounded-sm" />
+                                )}
+                                <span className="text-sm text-secondary-600 capitalize">
+                                  {entry.device_type}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-secondary-600">
+                              {entry.utm_source || '-'}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-secondary-600">
+                              {new Date(entry.created_at).toLocaleDateString()}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center space-x-2">
+                                <a
+                                  href={`https://wa.me/${entry.whatsapp_number.replace('+', '')}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-green-600 hover:text-green-800"
+                                  title="Open in WhatsApp"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                </a>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Pagination */}
+                  {totalNumbers > itemsPerPage && (
+                    <div className="px-4 py-3 border-t border-secondary-200 flex items-center justify-between">
+                      <div className="text-sm text-secondary-600">
+                        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalNumbers)} of {totalNumbers} entries
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                          disabled={currentPage === 1}
+                          className="px-3 py-1 border border-secondary-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary-50"
+                        >
+                          Previous
+                        </button>
+                        <span className="px-3 py-1 text-sm text-secondary-600">
+                          Page {currentPage} of {Math.ceil(totalNumbers / itemsPerPage)}
+                        </span>
+                        <button
+                          onClick={() => setCurrentPage(Math.min(Math.ceil(totalNumbers / itemsPerPage), currentPage + 1))}
+                          disabled={currentPage >= Math.ceil(totalNumbers / itemsPerPage)}
+                          className="px-3 py-1 border border-secondary-300 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-secondary-50"
+                        >
+                          Next
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         )}
