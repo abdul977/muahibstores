@@ -99,5 +99,6 @@ products.forEach(product => {
   if (product.description) {
     const message = generateProductInquiryMessage(product);
     product.whatsappLink = generateWhatsAppLink(WHATSAPP_PHONE_NUMBER, message);
+    console.log(`Generated WhatsApp link for ${product.name}:`, product.whatsappLink.substring(0, 100) + '...');
   }
 });
