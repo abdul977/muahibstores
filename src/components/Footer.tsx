@@ -1,11 +1,12 @@
 import React from 'react';
-import { 
-  Phone, 
-  Mail, 
-  MapPin, 
-  Facebook, 
-  Twitter, 
-  Instagram, 
+import { Link } from 'react-router-dom';
+import {
+  Phone,
+  Mail,
+  MapPin,
+  Facebook,
+  Twitter,
+  Instagram,
   Youtube,
   CreditCard,
   Smartphone,
@@ -68,34 +69,34 @@ const Footer: React.FC = () => {
               <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
               <ul className="space-y-2">
                 <li>
-                  <a href="#home" className="text-gray-300 hover:text-white transition-colors">
+                  <Link to="/" className="text-gray-300 hover:text-white transition-colors">
                     Home
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#products" className="text-gray-300 hover:text-white transition-colors">
+                  <Link to="/products" className="text-gray-300 hover:text-white transition-colors">
                     Products
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#about" className="text-gray-300 hover:text-white transition-colors">
+                  <Link to="/about" className="text-gray-300 hover:text-white transition-colors">
                     About Us
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#contact" className="text-gray-300 hover:text-white transition-colors">
+                  <Link to="/contact" className="text-gray-300 hover:text-white transition-colors">
                     Contact
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors">
+                  <Link to="/privacy-policy" className="text-gray-300 hover:text-white transition-colors">
                     Privacy Policy
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors">
+                  <Link to="/terms-of-service" className="text-gray-300 hover:text-white transition-colors">
                     Terms of Service
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -105,29 +106,29 @@ const Footer: React.FC = () => {
               <h4 className="text-lg font-semibold mb-4">Product Categories</h4>
               <ul className="space-y-2">
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors">
+                  <Link to="/category/Smartwatch" className="text-gray-300 hover:text-white transition-colors">
                     Smartwatches
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors">
+                  <Link to="/category/Phone" className="text-gray-300 hover:text-white transition-colors">
                     Smartphones
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors">
+                  <Link to="/category/Audio" className="text-gray-300 hover:text-white transition-colors">
                     Audio Devices
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors">
+                  <Link to="/category/Kitchen" className="text-gray-300 hover:text-white transition-colors">
                     Kitchen Appliances
-                  </a>
+                  </Link>
                 </li>
                 <li>
-                  <a href="#" className="text-gray-300 hover:text-white transition-colors">
+                  <Link to="/category/Accessories" className="text-gray-300 hover:text-white transition-colors">
                     Accessories
-                  </a>
+                  </Link>
                 </li>
               </ul>
             </div>

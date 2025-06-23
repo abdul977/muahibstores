@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import Header from './components/Header';
-import Footer from './components/Footer';
+import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import ProductsPage from './pages/ProductsPage';
 import ProductDetailPage from './pages/ProductDetailPage';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import CategoryPage from './pages/CategoryPage';
 import AdminLayout from './components/admin/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminProducts from './pages/admin/AdminProducts';
@@ -77,35 +81,14 @@ function App() {
           </Route>
 
           {/* Public Routes with Layout */}
-          <Route path="/" element={
-            <div className="min-h-screen bg-white">
-              <Header />
-              <main>
-                <HomePage />
-              </main>
-              <Footer />
-            </div>
-          } />
-
-          <Route path="/products" element={
-            <div className="min-h-screen bg-white">
-              <Header />
-              <main>
-                <ProductsPage />
-              </main>
-              <Footer />
-            </div>
-          } />
-
-          <Route path="/product/:id" element={
-            <div className="min-h-screen bg-white">
-              <Header />
-              <main>
-                <ProductDetailPage />
-              </main>
-              <Footer />
-            </div>
-          } />
+          <Route path="/" element={<Layout><HomePage /></Layout>} />
+          <Route path="/products" element={<Layout><ProductsPage /></Layout>} />
+          <Route path="/product/:id" element={<Layout><ProductDetailPage /></Layout>} />
+          <Route path="/about" element={<Layout><AboutPage /></Layout>} />
+          <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
+          <Route path="/privacy-policy" element={<Layout><PrivacyPolicyPage /></Layout>} />
+          <Route path="/terms-of-service" element={<Layout><TermsOfServicePage /></Layout>} />
+          <Route path="/category/:category" element={<Layout><CategoryPage /></Layout>} />
         </Routes>
       </Router>
     </AuthProvider>
